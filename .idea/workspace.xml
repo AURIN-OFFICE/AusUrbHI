@@ -1,25 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="70b492f1-ed20-48df-bd6f-da701ad44976" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/building_point_cloud/concaver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/building_point_cloud/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/building_point_cloud/rebuffer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/building_point_cloud/regularization.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/building_point_cloud/spliter.py" afterDir="false" />
+    <list default="true" id="f6492d01-31b0-41a1-b33a-f000c4904fd1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BOM_API/place_holder.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bom_api/bom_lst.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/bom_api/bom_lst.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/.ipynb_checkpoints/concave-checkpoint.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.cpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.dbf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.prj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.sbn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.sbx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.shp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.shp.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/buildings_clean_sv07.shx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/building_point_cloud/concave.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/building_point_cloud/img/demo.png" beforeDir="false" afterPath="$PROJECT_DIR$/building_point_cloud/img/demo.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,21 +29,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/haoc4/Documents/AURIN/AusUrbHI",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/haoc4/Documents/AURIN/AusUrbHI&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "Python",
-      "PLAIN_TEXT"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;,
+      &quot;PLAIN_TEXT&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\haoc4\Documents\AURIN\AusUrbHI" />
@@ -225,7 +209,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AusUrbHI$test.coverage" NAME="test Coverage Results" MODIFIED="1678971870327" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/AusUrbHI$place_holder.coverage" NAME="place_holder Coverage Results" MODIFIED="1678679023648" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/BOM_API" />
-    <SUITE FILE_PATH="coverage/AusUrbHI$main.coverage" NAME="main Coverage Results" MODIFIED="1679274932204" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/building_point_cloud" />
+    <SUITE FILE_PATH="coverage/AusUrbHI$main.coverage" NAME="main Coverage Results" MODIFIED="1679279397435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/building_point_cloud" />
     <SUITE FILE_PATH="coverage/AusUrbHI$concaver.coverage" NAME="concaver Coverage Results" MODIFIED="1679274627345" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/building_point_cloud" />
     <SUITE FILE_PATH="coverage/AusUrbHI$regularization.coverage" NAME="regularization Coverage Results" MODIFIED="1679272454111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/building_point_cloud" />
   </component>
