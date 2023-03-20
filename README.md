@@ -8,9 +8,13 @@ Obtain Land Surface Temperature (LST) data from BOM api.
 Cleanse building point cloud data.
 ![alt text](building_point_cloud/img/demo.png)
 ![alt text](building_point_cloud/img/comparison.png)
+
 datasets:
+
 OSM building for urban area data.
+
 Microsoft building footprint data for rural area.
+
 NSW spatial service building point cloud data for cross-reference.
 
 ### excess_heat_factor
