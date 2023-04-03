@@ -1,6 +1,13 @@
 # AusUrbHI
 Repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project.
 
+## aurin_datasets
+Including derive the study area for HVI and urban liveability case studies as shapefile.  
+
+### HVI and Urban Liveability
+
+### Cancer Atlas
+
 ## bom_api
 Obtain Land Surface Temperature (LST) data from BOM api.
 
@@ -25,10 +32,3 @@ Sample scripts for getting land surface temperature value from GEE with spatial 
 
 ## snomed_icd
 Perform code mapping between SNOMED-CT-AU and ICD-10.
-
-## Datasets
-Including derive the study area for HVI and urban liveability case studies as shapefile.  
-
-### HVI and Urban Liveability
-
-### Cancer Atlas
