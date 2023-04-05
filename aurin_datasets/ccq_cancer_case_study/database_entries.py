@@ -14,5 +14,3 @@ ccq_datasets = [
     'AU_Govt_ABS.sa2_seifa_irsd_2011',
     'AU_Govt_ABS.sa2_seifa_irsd_2016'
 ]
-
-print(len(ccq_datasets))
