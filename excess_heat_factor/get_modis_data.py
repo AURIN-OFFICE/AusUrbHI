@@ -6,6 +6,7 @@ import geopandas as gpd
 class ModisTemperature:
     """
     This class is used to get the daily minimum and maximum temperatures from the MODIS dataset.
+    NOTE: run earthengine authenticate before running this script.
     """
     def __init__(self, start_date, end_date, study_area_shapefile):
         # Initialize the Earth Engine API
