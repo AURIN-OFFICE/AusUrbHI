@@ -7,29 +7,25 @@ class ModisTemperature:
     """
     This class is used to get the daily minimum and maximum temperatures from the MODIS dataset.
     NOTE: run earthengine authenticate before running this script.
+
+    :param s_date: the start date
+    :param e_date: the end date
+    :param shp: the path to the study area shapefile
     """
-    def __init__(self, start_date, end_date, study_area_shapefile):
+    def __init__(self, s_date, e_date, shp):
         # Initialize the Earth Engine API
         ee.Authenticate()
         ee.Initialize()
+
+        # Set the start and end dates
+        self.start_date = s_date
+        self.end_date = e_date
+
+        # Get the study area shapefile
+        self.study_area = gpd.read_file(shp)
+
+        # Get GEE data
         self.dataset = ee.ImageCollection('MODIS/006/MOD11A1')
-
-        # Set the start and end dates and the study area
-        self.start_date = start_date
-        self.end_date = end_date
-        self.region = self.get_ee_study_area(study_area_shapefile)
-
-    @staticmethod
-    def get_ee_study_area(study_area_shapefile):
-        """
-        This function is used to get the study area as an ee.Geometry object.
-        @param study_area_shapefile: a string containing the path to the study area shapefile
-        @return: an ee.Geometry object
-        """
-        gdf = gpd.read_file('data/boundaries.shp')
-        minx, miny, maxx, maxy = gdf.total_bounds
-        study_area = ee.Geometry.Polygon([[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy], [minx, miny]])
-        return study_area
 
     def get_daily_temperature(self):
         """
@@ -85,7 +81,7 @@ if __name__ == '__main__':
     # Set the date range (2011-2021) and the study area
     start_date = '2011-01-01'
     end_date = '2021-12-31'
-    study_area = 'data/boundaries.shp'
+    study_area = 'data/sa1_nsw.shp'
 
     # Create an instance of the ModisTemperature class
     modis_temperature = ModisTemperature(start_date, end_date, study_area)
