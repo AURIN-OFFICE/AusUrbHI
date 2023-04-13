@@ -2,16 +2,13 @@
 Repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project.
 
 ## aurin_datasets
-Including derive the study area for HVI and urban liveability case studies as shapefile.  
-
-### HVI and Urban Liveability
-
-### Cancer Atlas
+Including derive the study area for HVI and urban liveability case studies as shapefile.
 
 ## building_point_cloud
 Cleanse building point cloud data.
-![alt text](building_point_cloud/img/demo.png)
-![alt text](building_point_cloud/img/comparison.png)
+
+<img src="building_point_cloud/img/demo.png" height="200" alt="pc1">
+<img src="building_point_cloud/img/comparison.png" height="200" alt="pc2">
 
 datasets:
 
@@ -23,6 +20,10 @@ NSW spatial service building point cloud data for cross-reference.
 
 ## excess_heat_factor
 Calculating EHF (excess heat factor - https://www.mdpi.com/1660-4601/12/1/227) for identifying heatwave periods.
+
+Create date cube for storing the data. 
+
+Datasets:
 
 | Dataset   | Spatial Resolution     | Temporal Resolution                                      |
 |-----------|------------------------|----------------------------------------------------------|
@@ -38,6 +39,8 @@ Calculating EHF (excess heat factor - https://www.mdpi.com/1660-4601/12/1/227) f
 **BOM** (Bureau of Meteorology, Australia) provides weather station-based data, and its spatial resolution varies depending on the density and distribution of weather stations. BOM data is typically available on daily, monthly, and annual timescales.
 
 **ERA5**, a reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF), has a spatial resolution of approximately 31 kilometers. It provides data at an hourly temporal resolution.
+
+To-do: create a mapping UI using PySimpleGUIQt.
 
 ## snomed_icd
 Perform code mapping between SNOMED-CT-AU and ICD-10.
