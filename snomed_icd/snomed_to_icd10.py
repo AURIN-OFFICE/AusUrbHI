@@ -71,9 +71,9 @@ print("Sample of snomed_2_icd_short: ", snomed_2_icd_short('90708001'))
 #print("Sample of snomed_2_icd_short: ", snomed_2_icd_short('1003367004'))
 
 #%% Sample test in df
-# data[['prev_SNOMED2ICD', 'prev_SNOMED_notin_ICD']] = data['previous_snomed'].apply(lambda x:snomed_2_icd(x)) 
-# data[~data['prev_SNOMED2ICD'].isna()]
-# data[~data['prev_SNOMED_notin_ICD'].isna()]
+# boundary_data[['prev_SNOMED2ICD', 'prev_SNOMED_notin_ICD']] = boundary_data['previous_snomed'].apply(lambda x:snomed_2_icd(x))
+# boundary_data[~boundary_data['prev_SNOMED2ICD'].isna()]
+# boundary_data[~boundary_data['prev_SNOMED_notin_ICD'].isna()]
 # data_add_diag_code[['ICD10', 'SNOMED_notin_ICD']] = data_add_diag_code['snomed'].apply(lambda x:snomed_2_icd(x)) 
 
 # %%

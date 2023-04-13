@@ -7,8 +7,8 @@ Including derive the study area for HVI and urban liveability case studies as sh
 ## building_point_cloud
 Cleanse building point cloud data.
 
-<img src="building_point_cloud/img/demo.png" height="200" alt="pc1">
-<img src="building_point_cloud/img/comparison.png" height="200" alt="pc2">
+<img src="building_point_cloud/img/demo.png" height="275" alt="pc1"> 
+<img src="building_point_cloud/img/comparison.png" height="275" alt="pc2">
 
 datasets:
 

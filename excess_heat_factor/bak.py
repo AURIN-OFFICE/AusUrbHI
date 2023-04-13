@@ -24,7 +24,7 @@ class ModisTemperature:
         # Get the study area shapefile
         self.study_area = gpd.read_file(shp)
 
-        # Get GEE data
+        # Get GEE boundary_data
         self.dataset = ee.ImageCollection('MODIS/006/MOD11A1')
 
     def get_daily_temperature(self):
@@ -65,7 +65,7 @@ class ModisTemperature:
             min_night = ee.Image(prev.get('min_night')).min(img.select('LST_Night_1km'))
             max_night = ee.Image(prev.get('max_night')).max(img.select('LST_Night_1km'))
             return ee.Dictionary(
-                {'min_day': min_day, 'max_day': max_day, 'min_night': min_night, 'max_night': max_night})
+        {'min_day': min_day, 'max_day': max_day, 'min_night': min_night, 'max_night': max_night})
 
         extreme_temps = daily_temps.iterate(min_max_temps, ee.Dictionary({
             'min_day': ee.Image.constant(100),
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # Set the date range (2011-2021) and the study area
     start_date = '2011-01-01'
     end_date = '2021-12-31'
-    study_area = 'data/sa1_nsw.shp'
+    study_area = 'boundary_data/sa1_nsw.shp'
 
     # Create an instance of the ModisTemperature class
     modis_temperature = ModisTemperature(start_date, end_date, study_area)
@@ -91,3 +91,4 @@ if __name__ == '__main__':
 
     # Print the temperature extremes as JSON
     print(json.dumps(extreme_temps.getInfo(), indent=2))
+    

@@ -1,6 +1,6 @@
 import ee
-import geopandas as gpd
 import pandas as pd
+import geopandas as gpd
 import xarray as xr
 import numpy as np
 from datetime import datetime, timedelta
@@ -12,15 +12,24 @@ class ModisLST:
                  start_date: str,
                  end_date: str,
                  shp_region_column: str):
+
+        # authenticate Google Earth Engine and get Modis boundary_data
         ee.Authenticate()
         ee.Initialize()
         self.modis_data = ee.ImageCollection('MODIS/006/MOD11A1')
 
+        # input boundary_data
         self.shp = gpd.read_file(study_area_shapefile)
         self.s_date = start_date
         self.e_date = end_date
         self.region_col = shp_region_column
-        self.data_cube = {}
+
+        # boundary_data cube for storing the output boundary_data
+        self.data_cube = xr.DataArray(
+            data=[],
+            coords={"SA1": [], "time": [], "temperature": ["min_temperature", "max_temperature"]},
+            dims=["SA1", "time", "temperature"],
+        )
 
     def get_temperature_data(self):
         for index, row in self.shp.iterrows():
@@ -52,11 +61,26 @@ class ModisLST:
                             ],
                             ignore_index=True)
 
+    def append_to_data_cube(self, sa1, date, min_temperature, max_temperature):
+        new_data = xr.DataArray(
+            np.array([[[min_temperature, max_temperature]]]),
+            coords={"SA1": [sa1], "time": [date], "temperature": ["min_temperature", "max_temperature"]},
+            dims=["SA1", "time", "temperature"],
+        )
+
+        if sa1 not in self.data_cube.SA1:
+            data_cube = xr.concat([self.data_cube, new_data], dim="SA1")
+        elif date not in self.data_cube.time:
+            data_cube = xr.concat([self.data_cube, new_data], dim="time")
+        else:
+            self.data_cube.loc[sa1, date, :] = [min_temperature, max_temperature]
+        return data_cube
+
     def query_temperature(self, sa1, date):
         result = self.temp_data.loc[(self.temp_data['SA1'] == sa1) & (self.temp_data['Date'] == date)]
         return result[['Min_Temperature', 'Max_Temperature']]
 
 
-obj = ModisLST('data/sa1_nsw.shp', '2011-01-01', '2021-12-31', 'SA1_MAIN16')
+obj = ModisLST('boundary_data/sa1_nsw.shp', '2011-01-01', '2021-12-31', 'SA1_MAIN16')
 obj.get_data()
 print(obj.query_data('10602111401', datetime(2013, 5, 20)))

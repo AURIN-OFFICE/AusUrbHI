@@ -179,7 +179,7 @@ def calculateProduct(func, progressbar, LST = None, NDVI= None, NDBI= None, PopD
             return dataframe
 
         def readGroupScaleDataset(dfList_, nameList_ ,progressbar_):
-            # read data
+            # read boundary_data
             dfList = [pd.read_csv(d) for d in dfList_]
             Cols = ['SA1_7DIG16']
             Cols.extend(nameList_)
@@ -187,7 +187,7 @@ def calculateProduct(func, progressbar, LST = None, NDVI= None, NDBI= None, PopD
             for i in range(len(dfList)):
                 dfList[i] = formatting(dfList[i], nameList_[i])
             progressbar_.UpdateBar(current_count=20, max=100)
-            # group data
+            # group boundary_data
             df_target_area = dfList[0]
             for i in range(1, len(dfList)):
                 df_target_area = df_target_area.merge(dfList[i], how='inner', on='SA1_7DIG16')

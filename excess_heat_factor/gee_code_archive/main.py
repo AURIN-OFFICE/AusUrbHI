@@ -19,7 +19,7 @@ scale = 1000
 lst_urban_point = collection.mean().sample(u_poi, scale).first().get('LST_Day_1km').getInfo()
 print('Average daytime LST at urban point:', round(lst_urban_point*0.02 -273.15, 2), '°C')
 
-# Get the data for the pixel intersecting the point in urban area.
+# Get the boundary_data for the pixel intersecting the point in urban area.
 lst_u_poi = collection.getRegion(u_poi, scale).getInfo()
 
 # Preview the result.
