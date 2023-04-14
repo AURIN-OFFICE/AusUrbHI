@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import ee
-import pandas as pd
 import geopandas as gpd
 import xarray as xr
 from datetime import datetime, timedelta
@@ -36,8 +35,8 @@ class ModisLST:
 
         # boundary_data cube for storing the output boundary_data
         self.data_cube = xr.Dataset(
-            data_vars={"tmax":[],
-                       "tmin":[]},
+            data_vars={"tmax": [],
+                       "tmin": []},
             coords={"region": [],
                     "date": []}
         )
@@ -139,6 +138,6 @@ class ModisLST:
         return result[['tmax', 'tmin']]
 
 
-obj = ModisLST('boundary_data/sa1_nsw.shp', '2021-01-01', '2021-12-31', 'SA1_MAIN16')
+obj = ModisLST('boundary_data/sa2_nsw.shp', '2021-01-01', '2021-2-1', 'SA1_MAIN16')
 obj.create_data_cube()
-print(obj.query('10602111401', '2021-6-1'))
+print(obj.query('10602111401', '2021-1-15'))
