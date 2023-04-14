@@ -22,18 +22,18 @@ class ModisLST:
         @param end_date: end date of the data to be retrieved
         """
 
-        # authenticate Google Earth Engine and get the MODIS data
-        ee.Authenticate()
+        # Initiate Google Earth Engine and get the MODIS data
+        # ee.Authenticate()
         ee.Initialize()
         self.modis_data = ee.ImageCollection('MODIS/006/MOD11A1')
 
-        # input area geometry and date range
+        # Input area geometry and date range
         self.shp = gpd.read_file(study_area_shapefile)
         self.region_col = shp_region_column
         self.s_date = start_date
         self.e_date = end_date
 
-        # boundary_data cube for storing the output boundary_data
+        # Create cube for storing the output boundary_data
         self.data_cube = xr.Dataset(
             data_vars={"tmax": [],
                        "tmin": []},
@@ -55,17 +55,28 @@ class ModisLST:
             .filterDate(date, date.advance(1, 'day'))\
             .filterBounds(geometry)
 
-        # Select temperature bands
-        daytime_lst = filtered_lst.select('LST_Day_1km')
-        nighttime_lst = filtered_lst.select('LST_Night_1km')
-
-        # Convert to Celsius and reduce to mean
-        daytime_lst = daytime_lst.map(lambda img: img.multiply(0.02).subtract(273.15))
-        nighttime_lst = nighttime_lst.map(lambda img: img.multiply(0.02).subtract(273.15))
+        # Select temperature bands and convert to Celsius
+        daytime_lst = filtered_lst\
+            .select('LST_Day_1km')\
+            .map(lambda img: img.multiply(0.02).subtract(273.15))
+        nighttime_lst = filtered_lst\
+            .select('LST_Night_1km')\
+            .map(lambda img: img.multiply(0.02).subtract(273.15))
 
         # Calculate max and min temperature
-        tmax = daytime_lst.reduce(ee.Reducer.max()).clip(geometry)
-        tmin = nighttime_lst.reduce(ee.Reducer.min()).clip(geometry)
+        tmax = daytime_lst.reduce(ee.Reducer.max()) \
+            .reduceRegion(reducer=ee.Reducer.max(),
+                          geometry=geometry,
+                          scale=1000,
+                          maxPixels=1e9) \
+            .getInfo()
+        tmin = nighttime_lst.reduce(ee.Reducer.max()) \
+            .reduceRegion(reducer=ee.Reducer.max(),
+                          geometry=geometry,
+                          scale=1000,
+                          maxPixels=1e9) \
+            .getInfo()
+
         return tmax, tmin
 
     def append_to_data_cube(self,
@@ -134,10 +145,10 @@ class ModisLST:
         @return: a tuple of the max and min temperature
         """
         date = datetime.strptime(date, "%Y-%m-%d")
-        result = self.data_cube.loc[(self.data_cube['region'] == region_name) & (self.data_cube['Date'] == date)]
+        result = self.data_cube.loc[(self.data_cube['region'] == region_name) & (self.data_cube['date'] == date)]
         return result[['tmax', 'tmin']]
 
 
-obj = ModisLST('boundary_data/sa2_nsw.shp', '2021-01-01', '2021-2-1', 'SA1_MAIN16')
+obj = ModisLST('boundary_data/sa2_nsw.shp', 'SA2_MAIN16', '2021-01-01', '2021-2-1')
 obj.create_data_cube()
 print(obj.query('10602111401', '2021-1-15'))
