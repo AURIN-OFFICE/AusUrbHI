@@ -1,31 +1,35 @@
 # AusUrbHI
 This is the repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project. The study aims to analyze the number and cause of emergency department (ED) presentations, hospitalizations, and deaths during a heatwave using person-level deidentified linked health data. The methodology involves determining the health component of the sensitivity sub-indicator, normalizing and categorizing variables, and conducting a Poisson multivariable regression to calculate the Heat Vulnerability Index (HVI) score. Spatial smoothing will be applied to the geographic data to protect data privacy and ensure statistical stability while adjusting for age, sex, and comorbidities. The resulting heat health vulnerability indicator will reveal the relative vulnerability of locations across the study area, and hotspot analysis will be performed to investigate statistically significant locations of heat health vulnerability. This comprehensive approach combines statistical methods and spatial analysis techniques to provide valuable insights into heat health vulnerability.
 
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/ausurbhi.png" width="500" alt="pc2">
-    <figcaption>Project diagram</figcaption>
-</figure></div>
-
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/ein.png" width="500" alt="pc2">
-    <figcaption>Systen e-Infrastructure</figcaption>
-</figure></div>
+<p align="center">
+    <img width="500" src="img/ausurbhi.png" alt="Project diagram"/>
+    <br>
+    <em>Project diagram</em>
+</p>
+<p align="center">
+    <img width="500" src="img/ein.png" alt="Systen e-Infrastructure"/>
+    <br>
+    <em>Systen e-Infrastructure</em>
+</p>
 
 ## Aurin Datasets Preparation
 Scripts for obtaining and derive the study area data for HVI and urban liveability case studies.
 
-<figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/study_area.png" height="250" alt="pc2">
-    <figcaption>Study area</figcaption>
-</figure>
-<figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/data.png" height="250" alt="pc2">
-    <figcaption>Data</figcaption>
-</figure>
-<figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/output.png" height="250" alt="pc2">
-    <figcaption>Refined data</figcaption>
-</figure>
+<p align="center">
+    <img height="250" src="img/study_area.png" alt="Study area"/>
+    <br>
+    <em>Study area</em>
+</p>
+<p align="center">
+    <img height="250" src="img/data.png" alt="Data"/>
+    <br>
+    <em>Data</em>
+</p>
+<p align="center">
+    <img height="250" src="img/output.png" alt="Refined data"/>
+    <br>
+    <em>Refined data</em>
+</p>
 
 ## Building Point Cloud Processing
 The building footprint processing methodology consists of three steps. 
@@ -34,14 +38,16 @@ The building footprint processing methodology consists of three steps.
 3.	Regularization: A regularize_building_footprints function takes an input feature class of building footprints, simplifies them using the Simplify Building tool in ArcGIS Pro, and saves the regularized footprints to an output feature class.
 An example result of the approach is shown below:
 
-<figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/demo.png" height="250" alt="pc1"> 
-    <figcaption>Process building point cloud data</figcaption>
-</figure>
-<figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/comparison.png" height="250" alt="pc2">
-    <figcaption>Comparison of processing result</figcaption>
-</figure>
+<p align="center">
+    <img height="250" src="img/demo.png" alt="Process building point cloud data"/>
+    <br>
+    <em>Process building point cloud data</em>
+</p>
+<p align="center">
+    <img height="250" src="img/comparison.png" alt="Comparison of processing result"/>
+    <br>
+    <em>Comparison of processing result</em>
+</p>
 
 datasets:
 
@@ -57,10 +63,11 @@ The approach consists of two steps. In the first step, we obtain MODIS data cont
 (in progress) In the second step, we plan to use Excess Heat Factor (EHF) to identify heatwaves in the study area. The EHF is calculated using the temperature data to determine the severity of a heatwave event. It comprises two components: the first is the Excess Heat Index (EHI), which measures the deviation of the daily temperature from the average temperature of the previous 30 days, and the second is the Acclimatization Index (AI), which measures how well the population is adapted to the current heat conditions. Combine these two indices to calculate the EHF. To identify heatwaves, we plan to apply a threshold to the EHF values, such as using the 90th percentile or another appropriate threshold for your study. By analyzing the EHF values over time and across the SA1 areas in the study area within NSW, Australia, we will then be able to identify periods and locations of heatwaves, enabling better planning and mitigation strategies for public health and safety.
 We choose to use NetCDF data cube rather than common file formats such as csv, geojson, or shapefile. This is because the NetCDF data cube format is better suited for storing the MODIS temperature data, as it can efficiently handle the continuous, multidimensional nature of the dataset and provide convenient access to the data and metadata.
 
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/data_cube.png" width="250" alt="pc2">
-    <figcaption>An example datacube shown in QGIS</figcaption>
-</figure></div>
+<p align="center">
+    <img width="250" src="img/data_cube.png" alt="An example datacube shown in QGIS"/>
+    <br>
+    <em>An example datacube shown in QGIS</em>
+</p>
 
 Here is the list of datasets we are planning to use and compare the results.
 
@@ -85,19 +92,19 @@ To-do: create a mapping UI using PySimpleGUIQt.
 The package performs code mapping between SNOMED-CT-AU and ICD-10. The methodology involved mapping SNOMED CT codes to ICD codes using a mock-up dataset with 4,000+ entries. Four steps were taken: 1) using Snapper to resolve synonyms and unofficial names, 2) using SnoMap, 3) using the IHTSDO international SNOMED mapping tool for cross-validation, and 4) using the I-MAGIC mapper, which resolved some unmatched entries. The final result was 99.68% recall, with 13 unmatched codes.
 However, there are risks associated with the process: 1) the actual dataset might not be as clean as the mock-up, 2) the size of the real dataset is unknown and may affect tool usability, 3) precision has not been checked, making validation difficult, 4) a coder with professional knowledge may be required to resolve unmatched entries and disambiguate multi-match cases, and 5) differences between the Australian and international versions of the codes may impact the reliability of the results from international tools. In conclusion, the methodology achieved a high recall rate, but further validation and professional expertise may be needed to ensure accurate results.
 
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/SnoMap.png" width="400" alt="pc2">
-    <figcaption>The SnoMap tool</figcaption>
-</figure></div>
-
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/IHTSDOl.png" width="300" alt="pc2">
-    <figcaption>The IHTSDO international SNOMED mapping tool</figcaption>
-</figure></div>
-
-<div style="text-align: center;"><figure style="display: inline-block; margin-right: 0px; margin-left: 0px;">
-    <img src="img/i_magic.png" width="300" alt="pc2">
-    <figcaption>The I-MAGIC tool</figcaption>
-</figure></div>
-
+<p align="center">
+    <img width="400" src="img/SnoMap.png" alt="The SnoMap tool"/>
+    <br>
+    <em>The SnoMap tool</em>
+</p>
+<p align="center">
+    <img width="400" src="img/IHTSDOl.png" alt="The IHTSDO international SNOMED mapping tool"/>
+    <br>
+    <em>The IHTSDO international SNOMED mapping tool</em>
+</p>
+<p align="center">
+    <img width="400" src="img/i_magic.png" alt="The I-MAGIC tool"/>
+    <br>
+    <em>The I-MAGIC tool</em>
+</p>
  
