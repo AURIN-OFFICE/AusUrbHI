@@ -1,86 +1,144 @@
+# -*- coding: utf-8 -*-
 import ee
 import pandas as pd
 import geopandas as gpd
 import xarray as xr
-import numpy as np
 from datetime import datetime, timedelta
 
 
 class ModisLST:
+    """
+    The ModisLST class is used to retrieve the MODIS Land Surface Temperature (LST) data for a given study area
+    and date range. The class uses the Google Earth Engine (GEE) API to retrieve the data and generate a xarray.
+    """
     def __init__(self,
                  study_area_shapefile: str,
+                 shp_region_column: str,
                  start_date: str,
-                 end_date: str,
-                 shp_region_column: str):
+                 end_date: str):
+        """
+        @param study_area_shapefile: a shapefile containing multiple polygons of the study area
+        @param shp_region_column: the name of the column in the shapefile that contains the region names
+        @param start_date: start date of the data to be retrieved
+        @param end_date: end date of the data to be retrieved
+        """
 
-        # authenticate Google Earth Engine and get Modis boundary_data
+        # authenticate Google Earth Engine and get the MODIS data
         ee.Authenticate()
         ee.Initialize()
         self.modis_data = ee.ImageCollection('MODIS/006/MOD11A1')
 
-        # input boundary_data
+        # input area geometry and date range
         self.shp = gpd.read_file(study_area_shapefile)
+        self.region_col = shp_region_column
         self.s_date = start_date
         self.e_date = end_date
-        self.region_col = shp_region_column
 
         # boundary_data cube for storing the output boundary_data
-        self.data_cube = xr.DataArray(
-            data=[],
-            coords={"SA1": [], "time": [], "temperature": ["min_temperature", "max_temperature"]},
-            dims=["SA1", "time", "temperature"],
+        self.data_cube = xr.Dataset(
+            data_vars={"tmax":[],
+                       "tmin":[]},
+            coords={"region": [],
+                    "date": []}
         )
 
-    def get_temperature_data(self):
+    def get_extreme_temperature_data_area_date(self,
+                                               geometry: ee.Geometry,
+                                               date: ee.Date) -> (float, float):
+        """
+        Get the max and min temperature for a given geometry and date
+        @param geometry: a geometry object
+        @param date: a datetime object
+        @return: a tuple of the max and min temperature
+        """
+        # Define the GEE image processing pipeline
+        filtered_lst = self.modis_data\
+            .filterDate(date, date.advance(1, 'day'))\
+            .filterBounds(geometry)
+
+        # Select temperature bands
+        daytime_lst = filtered_lst.select('LST_Day_1km')
+        nighttime_lst = filtered_lst.select('LST_Night_1km')
+
+        # Convert to Celsius and reduce to mean
+        daytime_lst = daytime_lst.map(lambda img: img.multiply(0.02).subtract(273.15))
+        nighttime_lst = nighttime_lst.map(lambda img: img.multiply(0.02).subtract(273.15))
+
+        # Calculate max and min temperature
+        tmax = daytime_lst.reduce(ee.Reducer.max()).clip(geometry)
+        tmin = nighttime_lst.reduce(ee.Reducer.min()).clip(geometry)
+        return tmax, tmin
+
+    def append_to_data_cube(self,
+                            region_name: str,
+                            date: ee.Date,
+                            tmax: str,
+                            tmin: str):
+        """
+        The function appends the temperature data to the data cube
+        @param region_name: the name of the region
+        @param date: the date of the data
+        @param tmax: the max temperature
+        @param tmin: the min temperature
+        """
+        # convert ee.Date to datetime object
+        date = datetime.utcfromtimestamp(ee.Date(date).getInfo()['value'] / 1000)
+
+        # create a new dataset and append it to the data cube
+        new_data = xr.Dataset(
+            data_vars={"tmax": (["region", "date"], [[tmax]]),
+                       "tmin": (["region", "date"], [[tmin]])},
+            coords={"region": [region_name],
+                    "date": [date]}
+        )
+        self.data_cube = xr.concat([self.data_cube, new_data], dim="region", combine_attrs="override")
+
+    def geometry_iterator(self) -> (str, ee.Geometry):
+        """
+        Generator that iterates through the geometries in the shapefile
+        @return: a tuple of the region name and the geometry
+        """
         for index, row in self.shp.iterrows():
-            sa1 = row['SA1_MAIN16']
+            region_name = row[self.region_col]
             geometry = ee.Geometry.Polygon(list(row['geometry'].exterior.coords))
+            yield region_name, geometry
 
-            for year in range(self.start_year, self.end_year + 1):
-                for month in range(1, 13):
-                    start_date = datetime(year, month, 1)
-                    end_date = start_date + timedelta(days=31)
-                    date_range = ee.DateRange(ee.Date(start_date), ee.Date(end_date))
+    def date_iterator(self) -> ee.Date:
+        """
+        Generator that iterates through the dates between the start and end dates
+        @return: an ee.Date object
+        """
+        start_date = datetime.strptime(self.s_date, "%Y-%m-%d")
+        end_date = datetime.strptime(self.e_date, "%Y-%m-%d")
+        for n in range(int((end_date - start_date).days)):
+            yield ee.Date(start_date + timedelta(n))
 
-                    filtered_data = dataset.filterDate(date_range).filterBounds(geometry)
-                    min_temp = filtered_data.min().select('LST_Day_1km', 'LST_Night_1km')
-                    max_temp = filtered_data.max().select('LST_Day_1km', 'LST_Night_1km')
+    def safe_netcdf(self):
+        """
+        Save the data cube to a netcdf file.
+        """
+        self.data_cube.to_netcdf(f"modis_lst_data_cube.nc")
 
-                    dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days)]
-                    for date in dates:
-                        temp_data = [{
-                            'SA1': sa1,
-                            'Date': date,
-                            'Min_Temperature': min_temp,
-                            'Max_Temperature': max_temp
-                        }]
-                        self.temp_data = pd.concat(
-                            [
-                                self.temp_data,
-                                pd.DataFrame.from_dict(temp_data)
-                            ],
-                            ignore_index=True)
+    def create_data_cube(self):
+        for region_name, geometry in self.geometry_iterator():
+            for date in self.date_iterator():
+                tmax, tmin = self.get_extreme_temperature_data_area_date(geometry, date)
+                self.append_to_data_cube(region_name, date, tmax.getInfo(), tmin.getInfo())
 
-    def append_to_data_cube(self, sa1, date, min_temperature, max_temperature):
-        new_data = xr.DataArray(
-            np.array([[[min_temperature, max_temperature]]]),
-            coords={"SA1": [sa1], "time": [date], "temperature": ["min_temperature", "max_temperature"]},
-            dims=["SA1", "time", "temperature"],
-        )
-
-        if sa1 not in self.data_cube.SA1:
-            data_cube = xr.concat([self.data_cube, new_data], dim="SA1")
-        elif date not in self.data_cube.time:
-            data_cube = xr.concat([self.data_cube, new_data], dim="time")
-        else:
-            self.data_cube.loc[sa1, date, :] = [min_temperature, max_temperature]
-        return data_cube
-
-    def query_temperature(self, sa1, date):
-        result = self.temp_data.loc[(self.temp_data['SA1'] == sa1) & (self.temp_data['Date'] == date)]
-        return result[['Min_Temperature', 'Max_Temperature']]
+    def query(self,
+              region_name: str,
+              date: str) -> (float, float):
+        """
+        Get the min and max temperature for a given region and date
+        @param region_name: the name of the region
+        @param date: the date of the data
+        @return: a tuple of the max and min temperature
+        """
+        date = datetime.strptime(date, "%Y-%m-%d")
+        result = self.data_cube.loc[(self.data_cube['region'] == region_name) & (self.data_cube['Date'] == date)]
+        return result[['tmax', 'tmin']]
 
 
-obj = ModisLST('boundary_data/sa1_nsw.shp', '2011-01-01', '2021-12-31', 'SA1_MAIN16')
-obj.get_data()
-print(obj.query_data('10602111401', datetime(2013, 5, 20)))
+obj = ModisLST('boundary_data/sa1_nsw.shp', '2021-01-01', '2021-12-31', 'SA1_MAIN16')
+obj.create_data_cube()
+print(obj.query('10602111401', '2021-6-1'))
