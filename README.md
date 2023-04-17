@@ -2,12 +2,12 @@
 This is the repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project. The study aims to analyze the number and cause of emergency department (ED) presentations, hospitalizations, and deaths during a heatwave using person-level deidentified linked health data. The methodology involves determining the health component of the sensitivity sub-indicator, normalizing and categorizing variables, and conducting a Poisson multivariable regression to calculate the Heat Vulnerability Index (HVI) score. Spatial smoothing will be applied to the geographic data to protect data privacy and ensure statistical stability while adjusting for age, sex, and comorbidities. The resulting heat health vulnerability indicator will reveal the relative vulnerability of locations across the study area, and hotspot analysis will be performed to investigate statistically significant locations of heat health vulnerability. This comprehensive approach combines statistical methods and spatial analysis techniques to provide valuable insights into heat health vulnerability.
 
 <p align="center">
-    <img width="500" src="img/ausurbhi.png" alt="Project diagram"/>
+    <img width="700" src="img/ausurbhi.png" alt="Project diagram"/>
     <br>
     <em>Project diagram</em>
 </p>
 <p align="center">
-    <img width="500" src="img/ein.png" alt="Systen e-Infrastructure"/>
+    <img width="700" src="img/ein.png" alt="Systen e-Infrastructure"/>
     <br>
     <em>Systen e-Infrastructure</em>
 </p>
