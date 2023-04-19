@@ -86,7 +86,7 @@ Here is the list of datasets we are planning to use and compare the results.
 
 **ERA5**, a reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF), has a spatial resolution of approximately 31 kilometers. It provides data at an hourly temporal resolution.
 
-To-do: create a mapping UI using PySimpleGUIQt.
+**BOM** The heatwave data (EHF) is available from late 2018 on wards only.
 
 ## SNOMED-CT-AU to ICD-10 Mapping
 The package performs code mapping between SNOMED-CT-AU and ICD-10. The methodology involved mapping SNOMED CT codes to ICD codes using a mock-up dataset with 4,000+ entries. Four steps were taken: 1) using Snapper to resolve synonyms and unofficial names, 2) using SnoMap, 3) using the IHTSDO international SNOMED mapping tool for cross-validation, and 4) using the I-MAGIC mapper, which resolved some unmatched entries. The final result was 99.68% recall, with 13 unmatched codes.
