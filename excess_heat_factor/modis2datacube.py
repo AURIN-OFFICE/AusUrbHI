@@ -186,8 +186,8 @@ class ModisLST:
                 index_data["date"].append(pd.to_datetime(date))
                 data["tmax"].append(temp_data["tmax"])
                 data["tmin"].append(temp_data["tmin"])
-                geometry = self.get_geometry(region)
-                index_data["geometry"].append(geometry)
+                # geometry = self.get_geometry(region)
+                # index_data["geometry"].append(geometry)
             print(f"region {region} added to data cube, {round(count * 100 / total, 1)}%.")
             count += 1
 
@@ -199,10 +199,10 @@ class ModisLST:
         df = pd.DataFrame(data, index=multi_index)
 
         # Convert the DataFrame to a GeoDataFrame
-        gdf = gpd.GeoDataFrame(df, geometry=index_data["geometry"])
+        # gdf = gpd.GeoDataFrame(df, geometry=index_data["geometry"])
 
         # Convert the GeoDataFrame to a xarray Dataset
-        ds = gdf.to_xarray()
+        ds = df.to_xarray()
 
         # Save the xarray Dataset as a NetCDF file
         ds.to_netcdf(netcdf_dir)
