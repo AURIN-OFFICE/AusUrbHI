@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import sys
 from collections import defaultdict
 from datetime import datetime
 
@@ -93,16 +92,20 @@ class ModisLST:
             @return: an ee.Image
             """
             return image\
+                .select(['LST_Day_1km', 'LST_Night_1km'])\
                 .multiply(0.02)\
-                .subtract(273.15)\
-                .select(['LST_Day_1km', 'LST_Night_1km'])
+                .subtract(273.15)
 
         # get the maximum and minimum temperature image collection
         modis = ee\
-            .ImageCollection("MODIS/006/MOD11A1")\
+            .ImageCollection("MODIS/006/MOD11A2")\
             .filterDate(self.s_date, self.e_date)\
-            .filterBounds(self.boundary) \
+            .filterBounds(self.boundary)\
             .map(convert_celsius)
+
+        # from pprint import pprint
+        # pprint(modis.getInfo())
+        # sys.exit(0)
 
         # get the maximum and minimum temperature of each region
         count = 1
@@ -226,8 +229,8 @@ class ModisLST:
 
 if __name__ == '__main__':
     json_dir = "modis_lst_data.json"
-    obj = ModisLST('boundary_data/boundaries.shp', 'boundary_data/sa3_nsw.shp',
-                   'SA3_CODE16', '2019-12-01', '2020-03-01')
+    obj = ModisLST('boundary_data/boundaries.shp', 'boundary_data/sa4_nsw.shp',
+                   'SA4_CODE16', '2019-12-01', '2020-03-01')
     if not os.path.exists(json_dir):
         obj.get_max_min_temperature()
     obj.save_json(json_dir, "modis_lst_data_cube.nc")
