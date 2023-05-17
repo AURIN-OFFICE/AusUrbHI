@@ -1,0 +1,225 @@
+# -*- coding: utf-8 -*-
+import json
+import os
+from collections import defaultdict
+from datetime import datetime
+
+import ee
+import geopandas as gpd
+import pandas as pd
+import shapely
+
+
+class ModisLST:
+    def __init__(self,
+                 region_collection_shapefile,
+                 study_area_geolevel_column,
+                 start_date,
+                 end_date):
+        """
+        @param region_collection_shapefile: a collection of regions as study area to get LST data for (e.g., SA1s).
+        @param study_area_geolevel_column: the column containing geolevel info, e.g., "SA1_MAIN16".
+        @param start_date and end_date: start and end data in "YY-mm-dd" format.
+        """
+        ee.Initialize()
+        self.region_collection_gdf = gpd.read_file(region_collection_shapefile)
+        self.study_area = self.get_study_area()
+        self.study_area_geolevel_column = study_area_geolevel_column
+        self.start_date = start_date
+        self.end_date = end_date
+        self.land_surface_temperature_data = defaultdict(lambda: defaultdict(dict))
+
+    def get_study_area(self):
+        return self.region_collection_gdf.geometry.iloc[0]
+
+    @staticmethod
+    def shapely_to_ee_geometry_polygon(geometry):
+        exterior_coords = list(geometry.exterior.coords)
+        # Check if the polygon has any interior ("hole") coordinates
+        if len(geometry.interiors) > 0:
+            interior_coords = [list(interior.coords) for interior in geometry.interiors]
+            return ee.Geometry.Polygon([exterior_coords] + interior_coords)
+        else:
+            return ee.Geometry.Polygon([exterior_coords])
+
+    @staticmethod
+    def shapely_to_ee_geometry_multipolygon(geometry):
+        all_polygons_coords = []
+        for polygon in geometry:
+            exterior_coords = list(polygon.exterior.coords)
+            # Check if the polygon has any interior ("hole") coordinates
+            if len(polygon.interiors) > 0:
+                interior_coords = [list(interior.coords) for interior in polygon.interiors]
+                all_polygons_coords.append([exterior_coords] + interior_coords)
+            else:
+                all_polygons_coords.append([exterior_coords])
+        return ee.Geometry.MultiPolygon(all_polygons_coords)
+
+    def shapely_to_ee_geometry(self, geometry):
+        if isinstance(geometry, shapely.geometry.Polygon):
+            return self.shapely_to_ee_geometry_polygon(geometry)
+        elif isinstance(geometry, shapely.geometry.MultiPolygon):
+            return self.shapely_to_ee_geometry_multipolygon(geometry)
+
+    def geometry_iterator(self):
+        """iterate through the study area shapefile and yield the region code and geometry of each region"""
+        for index, row in self.region_collection_gdf.iterrows():
+            region_code = row[self.study_area_geolevel_column]
+            geometry = row['geometry']
+            ee_geometry = self.shapely_to_ee_geometry(geometry)
+            yield str(region_code), ee_geometry
+
+    @staticmethod
+    def convert_to_celsius(image):
+        return image \
+            .select(['LST_Day_1km', 'LST_Night_1km']) \
+            .multiply(0.02) \
+            .subtract(273.15)
+
+    def get_land_surface_temperature(self):
+        modis = ee\
+            .ImageCollection("MODIS/006/MOD11A2")\
+            .filterDate(self.start_date, self.end_date)\
+            .filterBounds(self.study_area)\
+            .map(self.convert_to_celsius)
+
+        def export_image(image):
+            image = ee.Image(image)
+            filename = image.get('system:index').getInfo()
+
+            task_config = {
+                'image': image,
+                'description': filename,
+                'scale': 30,
+                'region': image.geometry(),
+                'fileFormat': 'GeoTIFF',
+                'folder': 'GEE_exports',
+            }
+
+            task = ee.batch.Export.image.toDrive(**task_config)
+            task.start()
+
+        modis.map(export_image)
+
+    #     # from pprint import pprint
+    #     # pprint(modis.getInfo())
+    #     # sys.exit(0)
+    #
+    #     # get the maximum and minimum temperature of each region
+    #     count = 1
+    #     total = len(self.gdf)
+    #     for region_name, geometry in self.geometry_iterator():
+    #         def calculate_daily_min_max(image: ee.Image) -> ee.Feature:
+    #             """
+    #             Calculate the maximum and minimum temperature of each day.
+    #             @param image: an ee.Image
+    #             @return: an ee.Feature
+    #             """
+    #             daily_min_max = image.reduceRegion(
+    #                 reducer=ee.Reducer.minMax(),
+    #                 geometry=geometry
+    #             )
+    #             return ee.Feature(None, daily_min_max)
+    #
+    #         # get the maximum and minimum temperature of each day
+    #         daily_min_max_features = modis.map(calculate_daily_min_max)
+    #
+    #         # populate data dictionary
+    #         for row in daily_min_max_features.getInfo()['features']:
+    #             tmax = row['properties']['LST_Day_1km_max']
+    #             tmin = row['properties']['LST_Night_1km_min']
+    #             self.dict_data[region_name][row["id"]]["tmax"] = tmax
+    #             self.dict_data[region_name][row["id"]]["tmin"] = tmin
+    #         print(f"region {region_name} temperature info obtained, {round(count*100/total, 1)}%.")
+    #         count += 1
+    #
+    # def get_geometry(self, region):
+    #     """
+    #     Get the geometry of a region.
+    #     @param region: the name of the region.
+    #     @return: an ee.Geometry
+    #     """
+    #     row = self.gdf.loc[self.gdf[self.region_col] == region]
+    #     if not row.empty:
+    #         return row['geometry'].iloc[0]
+    #     else:
+    #         print(f"warning: no geometry data found for region: {region}")
+    #         return None
+    #
+    # def save(self):
+    #
+    #     output_file_prefix = f"{config['study_area_geolevel_column']}_{config['start_date']}_{config['end_date']}"
+    #     config.update({
+    #         "output_geojson_directory": f"{output_file_prefix}.geojson",
+    #         "output_shp_directory": f"{output_file_prefix}.shp",
+    #         "output_file_prefix": f"{output_file_prefix}.nc"
+    #     })
+    #
+    #     if not os.path.exists(json_filedir):
+    #         with open(json_filedir, "w") as outfile:
+    #             json.dump(self.dict_data, outfile)
+    #
+    #     # Prepare the data for xarray
+    #     data = {
+    #         "tmax": [],
+    #         "tmin": []
+    #     }
+    #     index_data = {
+    #         "region": [],
+    #         "date": [],
+    #         "geometry": []
+    #     }
+    #
+    #     # Load temperature json data
+    #     if self.dict_data:
+    #         dict_data = self.dict_data
+    #     else:
+    #         with open(json_filedir, 'r') as f:
+    #             dict_data = json.load(f)
+    #
+    #     # Populate the data cube
+    #     count = 0
+    #     total = len(dict_data.keys())
+    #     index_data = {"region": [], "date": [], "geometry": []}
+    #     for region, date_dict in dict_data.items():
+    #         for date, temp_data in date_dict.items():
+    #             index_data["region"].append(region)
+    #             date = datetime.strptime(date, '%Y_%m_%d')
+    #             index_data["date"].append(pd.to_datetime(date))
+    #             data["tmax"].append(temp_data["tmax"])
+    #             data["tmin"].append(temp_data["tmin"])
+    #             # geometry = self.get_geometry(region)
+    #             # index_data["geometry"].append(geometry)
+    #         print(f"region {region} added to data cube, {round(count * 100 / total, 1)}%.")
+    #         count += 1
+    #
+    #     # Create a multi-indexed pandas DataFrame
+    #     multi_index = pd.MultiIndex.from_tuples(
+    #         list(zip(index_data["region"], index_data["date"])), names=["region", "date"]
+    #     )
+    #
+    #     df = pd.DataFrame(data, index=multi_index)
+    #
+    #     # Convert the DataFrame to a GeoDataFrame
+    #     # gdf = gpd.GeoDataFrame(df, geometry=index_data["geometry"])
+    #
+    #     # Convert the GeoDataFrame to a xarray Dataset
+    #     ds = df.to_xarray()
+    #
+    #     # Save the xarray Dataset as a NetCDF file
+    #     ds.to_netcdf(netcdf_dir)
+
+
+if __name__ == '__main__':
+    # data_source = "modis"
+    region_collection_shapefile = "boundary_data/boundaries.shp"
+    study_area_geolevel_column = "SA1_MAIN16"
+    start_date = "2019-12-31"
+    end_date = "2020-01-04"
+    output_file_format = ("geojson", "shp", "netcdf")
+
+    ModisLST(region_collection_shapefile,
+             study_area_geolevel_column,
+             start_date,
+             end_date)\
+        # .save(output_file_format)
