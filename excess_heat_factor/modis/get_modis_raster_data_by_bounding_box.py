@@ -14,7 +14,7 @@ def convert_to_celsius(image):
         .subtract(273.15)
 
 
-bbox = [150.345154, -34.603824, 151.438293, -33.323644]
+bbox = [148.820801, -35.594786, 152.819824, -32.407792]
 polygon = Polygon([(bbox[0], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[3]), (bbox[2], bbox[1])])
 
 ee_geometry = ee.Geometry.Polygon(polygon.__geo_interface__["coordinates"])
@@ -32,9 +32,9 @@ print('image obtained')
 
 task = ee.batch.Export.image.toDrive(
     image=image,
-    description='imageToDriveExample',
+    description='100_scale',
     folder='exportExample',
-    scale=30,
-    region=polygon
+    scale=100,
+    region=ee_geometry
 )
 task.start()
