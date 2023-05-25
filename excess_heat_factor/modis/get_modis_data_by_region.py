@@ -12,25 +12,22 @@ import shapely
 
 class ModisLST:
     def __init__(self,
-                 region_collection_shapefile,
-                 study_area_geolevel_column,
+                 region_collection_shp,
+                 geolevel_column,
                  start_date,
                  end_date):
         """
-        @param region_collection_shapefile: a collection of regions as study area to get LST data for (e.g., SA1s).
-        @param study_area_geolevel_column: the column containing geolevel info, e.g., "SA1_MAIN16".
+        @param region_collection_shp: a collection of regions as study area to get LST data for (e.g., SA1s).
+        @param geolevel_column: the column containing geolevel info, e.g., "SA1_MAIN16".
         @param start_date and end_date: start and end data in "YY-mm-dd" format.
         """
         ee.Initialize()
-        self.region_collection_gdf = gpd.read_file(region_collection_shapefile)
-        self.study_area = self.get_study_area()
-        self.study_area_geolevel_column = study_area_geolevel_column
+        self.region_collection_gdf = gpd.read_file(region_collection_shp)
+        self.study_area = self.region_collection_gdf.total_bounds
+        self.geolevel_column = geolevel_column
         self.start_date = start_date
         self.end_date = end_date
         self.land_surface_temperature_data = defaultdict(lambda: defaultdict(dict))
-
-    def get_study_area(self):
-        return self.region_collection_gdf.geometry.iloc[0]
 
     @staticmethod
     def shapely_to_ee_geometry_polygon(geometry):
@@ -55,18 +52,19 @@ class ModisLST:
                 all_polygons_coords.append([exterior_coords])
         return ee.Geometry.MultiPolygon(all_polygons_coords)
 
-    def shapely_to_ee_geometry(self, geometry):
+    def get_ee_geometry(self, geometry):
         if isinstance(geometry, shapely.geometry.Polygon):
             return self.shapely_to_ee_geometry_polygon(geometry)
         elif isinstance(geometry, shapely.geometry.MultiPolygon):
             return self.shapely_to_ee_geometry_multipolygon(geometry)
 
     def geometry_iterator(self):
-        """iterate through the study area shapefile and yield the region code and geometry of each region"""
+        """iterate through the region collection shapefile and
+        yield the region code and geometry of each region"""
         for index, row in self.region_collection_gdf.iterrows():
-            region_code = row[self.study_area_geolevel_column]
+            region_code = row[self.geolevel_column]
             geometry = row['geometry']
-            ee_geometry = self.shapely_to_ee_geometry(geometry)
+            ee_geometry = self.get_ee_geometry(geometry)
             yield str(region_code), ee_geometry
 
     @staticmethod
@@ -148,7 +146,7 @@ class ModisLST:
     #
     # def save(self):
     #
-    #     output_file_prefix = f"{config['study_area_geolevel_column']}_{config['start_date']}_{config['end_date']}"
+    #     output_file_prefix = f"{config['geolevel_column']}_{config['start_date']}_{config['end_date']}"
     #     config.update({
     #         "output_geojson_directory": f"{output_file_prefix}.geojson",
     #         "output_shp_directory": f"{output_file_prefix}.shp",
@@ -209,17 +207,22 @@ class ModisLST:
     #     # Save the xarray Dataset as a NetCDF file
     #     ds.to_netcdf(netcdf_dir)
 
+    def save(self, output_file_format):
+        pass
+
 
 if __name__ == '__main__':
-    # data_source = "modis"
-    region_collection_shapefile = "boundary_data/boundaries.shp"
-    study_area_geolevel_column = "SA1_MAIN16"
-    start_date = "2019-12-31"
-    end_date = "2020-01-04"
-    output_file_format = ("geojson", "shp", "netcdf")
+    def main():
+        # data_source = "modis"
+        region_collection_shp = "sa3_nsw.shp"
+        geolevel_column = "SA3_CODE16"
+        start_date = "2019-11-01"
+        end_date = "2020-03-31"
+        output_file_format = ("geojson", "shp", "netcdf")
 
-    ModisLST(region_collection_shapefile,
-             study_area_geolevel_column,
-             start_date,
-             end_date)\
-        # .save(output_file_format)
+        ModisLST(region_collection_shp,
+                 geolevel_column,
+                 start_date,
+                 end_date).save(output_file_format)
+
+    main()
