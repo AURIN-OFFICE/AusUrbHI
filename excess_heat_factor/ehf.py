@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class HeatwaveDetector:
     def __init__(self, max_temps, min_temps):
         self.max_temps = max_temps
@@ -30,7 +31,8 @@ class HeatwaveDetector:
                 heatwave_days.append(i)
 
         return heatwave_days
-    
+
+
 max_temps = [30, 31, 32, 33, 34, 35, 30, 29, 30, 31]
 min_temps = [25, 26, 27, 28, 29, 30, 25, 24, 25, 26]
 

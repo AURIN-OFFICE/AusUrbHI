@@ -5,3 +5,5 @@ earthengine-api~=0.1.348
 xarray~=2023.4.1
 geopandas~=0.12.2
 shapely~=2.0.1
+matplotlib~=3.7.1
+tqdm~=4.65.0
