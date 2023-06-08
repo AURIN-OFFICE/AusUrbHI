@@ -11,35 +11,14 @@ from tqdm import tqdm
 
 class ModisDataProcessor:
     def __init__(self, region_collection_shp, geo_level_column, start_date, end_date, scale):
-        """
-        Initialize the ModisDataProcessor class.
-
-        Args:
-        region_collection_shp (str): A collection of regions as study area to get LST data for (e.g., SA1s).
-        geo_level_column (str): The column containing geolevel info, e.g., "SA1_MAIN16".
-        start_date (str): Start data in "YY-mm-dd" format.
-        end_date (str): End data in "YY-mm-dd" format.
-        scale (int): The scale of the LST data, e.g., 30.
-        """
-        # Initialize Google Earth Engine
         ee.Initialize()
 
-        # Read shape file
         self.region_collection_gdf = gpd.read_file(region_collection_shp)
-
         self.geo_level_column = geo_level_column
-
-        # Create geometry for the study area
         self.study_area = ee.Geometry.Polygon([list(self.region_collection_gdf['geometry'][0].exterior.coords)])
-
-        # Convert regions to features
-        self.region_collection_feature = self.convert_feature()
-
-        # Set the start and end dates
+        self.region_collection_ee_feature = self.convert_feature()
         self.start_date = start_date
         self.end_date = end_date
-
-        # Set the scale
         self.scale = scale
 
     def create_feature(self, polygon, row):
@@ -180,20 +159,12 @@ if __name__ == '__main__':
         geo_level_column = "SA2_MAIN16"
         start_date = "2019-07-01"
         end_date = "2019-07-05"
-        scale = 30
+        scale = 100
         save_file_name = "modis_data.nc"
 
-        # Create an instance of ModisDataProcessor
         processor = ModisDataProcessor(region_collection_shp, geo_level_column, start_date, end_date, scale)
-
-        # Fetch data
         processor.fetch_data()
-
-        # Process data
         processor.process_data()
-
-        # Save data
         processor.save_as_netcdf(save_file_name)
-
 
     main()
