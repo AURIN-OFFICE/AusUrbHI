@@ -1,335 +1,106 @@
 # -*- coding: utf-8 -*-
-import json
-import os
-from collections import defaultdict
-from datetime import datetime
-
-import ee
-import geopandas as gpd
-import pandas as pd
-import shapely
-
-import ee
-import geopandas as gpd
-import xarray as xr
-from rasterstats import zonal_stats
-from rasterio.features import geometry_mask
-
-
-class ModisLST:
-    def __init__(self,
-                 region_collection_shp,
-                 geolevel_column,
-                 start_date,
-                 end_date):
-        """
-        @param region_collection_shp: a collection of regions as study area to get LST data for (e.g., SA1s).
-        @param geolevel_column: the column containing geolevel info, e.g., "SA1_MAIN16".
-        @param start_date and end_date: start and end data in "YY-mm-dd" format.
-        """
-        ee.Initialize()
-        self.region_collection_gdf = gpd.read_file(region_collection_shp)
-        self.study_area = self.region_collection_gdf.total_bounds
-        self.geolevel_column = geolevel_column
-        self.start_date = start_date
-        self.end_date = end_date
-        self.land_surface_temperature_data = defaultdict(lambda: defaultdict(dict))
-
-    @staticmethod# -*- coding: utf-8 -*-
-
-from datetime import datetime, timedelta
 
 import ee
 import geopandas as gpd
 import pandas as pd
 import xarray as xr
+from shapely.geometry import Polygon, MultiPolygon
 from tqdm import tqdm
 
 
 class ModisDataProcessor:
-    def __init__(self, region_collection_shp, geo_level_column, start_date, end_date, scale):
+    def __init__(self, product, region_collection_shp, geo_level_column, start_date, end_date, scale):
+        # ee.Authenticate()
         ee.Initialize()
 
-        self.region_collection_gdf = gpd.read_file(region_collection_shp)
+        self.product = product
+        self.region_collection_gdf = gpd.read_file(region_collection_shp)[:3]
         self.study_area = self.compute_study_area()
-        self.region_collection_ee_feature = self.convert_ee_feature()
-
         self.geo_level_column = geo_level_column
         self.start_date = start_date
         self.end_date = end_date
         self.scale = scale
+        self.data = []
 
     def compute_study_area(self):
-        """Compute the minimum bounding box of the region collection as an ee Polygon."""
         minx, miny, maxx, maxy = self.region_collection_gdf.total_bounds
         coords = [[minx, miny], [minx, maxy], [maxx, maxy], [maxx, miny], [minx, miny]]
         bounding_box = ee.Geometry.Polygon(coords)
         return bounding_box
 
-    def create_feature(self, polygon, row):
-        polygon = ee.Geometry.Polygon(list(polygon.exterior.coords))
-        feature = ee.Feature(polygon, {self.geo_level_column: row[self.geo_level_column]})
-        return feature
-
-    def convert_ee_feature(self):
-        """Convert the regions in region_collection_gdf to a list of ee features."""
-        feature_list = []
-        for _, row in self.region_collection_gdf.iterrows():
-            geom = row['geometry']
-
-            # Check if the geometry is a MultiPolygon
-            if geom.geom_type == 'MultiPolygon':
-                for polygon in geom.geoms:
-                    feature = self.create_feature(polygon, row)
-                    feature_list.append(feature)
-            else:  # It's a normal Polygon
-                feature = self.create_feature(geom, row)
-                feature_list.append(feature)
-
-        return ee.FeatureCollection(feature_list)
+    @staticmethod
+    def shapely_to_ee(geom):
+        geojson = geom.__geo_interface__
+        if isinstance(geom, Polygon):
+            return ee.Geometry.Polygon(geojson['coordinates'])
+        elif isinstance(geom, MultiPolygon):
+            return ee.Geometry.MultiPolygon(geojson['coordinates'])
 
     @staticmethod
     def convert_to_celsius(image):
         return image.select(['LST_Day_1km', 'LST_Night_1km']).multiply(0.02).subtract(273.15)
 
     def fetch_data(self):
-        """
-        Fetch MODIS LST data for the given study area and date range.
-        """
-        # Create an ImageCollection for MODIS LST data
-        self.image_collection = ee \
-            .ImageCollection("MODIS/006/MOD11A2") \
-            .filterDate(self.start_date, self.end_date) \
-            .filterBounds(self.study_area) \
-            .map(self.convert_to_celsius) \
+        image_collection = ee\
+            .ImageCollection(self.product)\
+            .filterDate(self.start_date, self.end_date)\
+            .filterBounds(self.study_area)\
+            .map(self.convert_to_celsius)\
             .select(['LST_Day_1km', 'LST_Night_1km'])
 
-    def reduce_region(self, image):
-        return image.reduceRegion(self.region_collection_ee_feature, ee.Reducer.minMax(), self.scale)
+        image_list = image_collection.toList(image_collection.size())
 
-    def process_data(self):
-        self.start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
-        self.end_date = datetime.strptime(self.end_date, '%Y-%m-%d')
-        delta = self.end_date - self.start_date
+        for _, row in tqdm(self.region_collection_gdf.iterrows(),
+                           total=self.region_collection_gdf.shape[0],
+                           desc=f"Iterating over regions from {self.geo_level_column}"):
+            region_id = row[self.geo_level_column]
+            geom = self.shapely_to_ee(row['geometry'])
+            daily_min_max = []
+            for i in range(image_list.size().getInfo()):
+                image = ee.Image(image_list.get(i))
+                image_reduction = image.reduceRegion(ee.Reducer.minMax(), geom, self.scale).getInfo()
+                image_reduction['region_id'] = region_id
+                daily_min_max.append(image_reduction)
+            print(daily_min_max)
+            self.data.append(daily_min_max)
 
-        result = []
+    def save_shapefile(self, file_name):
+        flat_data = [item for sublist in self.data for item in sublist]
+        df = pd.DataFrame(flat_data)
+        df.set_index('region_id', inplace=True)
 
-        # Process data day by day to avoid large payload size
-        for i in tqdm(range(delta.days + 1), desc="Processing data"):
-            # Calculate the date for the current day
-            day = self.start_date + timedelta(days=i)
+        reshaped_df = pd.DataFrame()
+        for date_col in df.columns:
+            date = pd.to_datetime(date_col)
+            day_max_col = f"{date_col}_DayMax"
+            night_min_col = f"{date_col}_NightMin"
+            reshaped_df[day_max_col] = df[date_col].apply(lambda x: x.get('LST_Day_1km'))
+            reshaped_df[night_min_col] = df[date_col].apply(lambda x: x.get('LST_Night_1km'))
 
-            # Filter the data for the current day
-            day_collection = self.image_collection.filter(ee.Filter.calendarRange(day.day, day.day, 'day_of_year'))
+        gdf = self.region_collection_gdf[[self.geo_level_column, 'geometry']].\
+            merge(reshaped_df, left_on=self.geo_level_column, right_index=True)
+        gdf.to_file(file_name, driver='ESRI Shapefile')
 
-            # Reduce the data to the regions
-            daily_data = day_collection.map(self.reduce_region)
-
-            # Fetch data for each day individually
-            daily_data_info = daily_data.getInfo()
-            result.append(daily_data_info)
-
-        # Store the result
-        self.data = result
-
-    def save_as_netcdf(self, file_name):
-        """
-        Save the processed data as a netCDF file.
-
-        Args:
-        file_name (str): Name of the netCDF file.
-        """
-        # Convert the data to a pandas DataFrame
-        df = pd.DataFrame(self.data)
-
-        # Convert the DataFrame to an xarray Dataset
+    def save_netcdf(self, file_name):
+        flat_data = [item for sublist in self.data for item in sublist]
+        df = pd.DataFrame(flat_data)
+        df.set_index('region_id', inplace=True)
         xds = xr.Dataset.from_dataframe(df)
-
-        # Save the Dataset as a netCDF file
         xds.to_netcdf(file_name)
 
 
 if __name__ == '__main__':
-    def main():
-        region_collection_shp = "../_data/boundary_data/sa4_nsw.shp"
-        geo_level_column = "SA4_CODE16"
-        start_date = "2019-07-01"
-        end_date = "2019-07-05"
-        scale = 100
-        save_file_name = "modis_data.nc"
+    product = "MODIS/006/MOD11A1"
+    region_collection_shp = "../_data/boundary_data/sa4_nsw.shp"
+    geo_level_column = "SA4_CODE16"
+    start_date = "2019-07-03"
+    end_date = "2019-07-05"
+    scale = 500
+    shapefile_name = f"{geo_level_column}_{start_date}_{end_date}.shapefile"
+    netcdf_name = f"{geo_level_column}_{start_date}_{end_date}.nc"
 
-        processor = ModisDataProcessor(region_collection_shp, geo_level_column, start_date, end_date, scale)
-        processor.fetch_data()
-        processor.process_data()
-        processor.save_as_netcdf(save_file_name)
-
-    main()
-
-    def shapely_to_ee_geometry_polygon(geometry):
-        exterior_coords = list(geometry.exterior.coords)
-        # Check if the polygon has any interior ("hole") coordinates
-        if len(geometry.interiors) > 0:
-            interior_coords = [list(interior.coords) for interior in geometry.interiors]
-            return ee.Geometry.Polygon([exterior_coords] + interior_coords)
-        else:
-            return ee.Geometry.Polygon([exterior_coords])
-
-    @staticmethod
-    def shapely_to_ee_geometry_multipolygon(geometry):
-        all_polygons_coords = []
-        for polygon in geometry:
-            exterior_coords = list(polygon.exterior.coords)
-            # Check if the polygon has any interior ("hole") coordinates
-            if len(polygon.interiors) > 0:
-                interior_coords = [list(interior.coords) for interior in polygon.interiors]
-                all_polygons_coords.append([exterior_coords] + interior_coords)
-            else:
-                all_polygons_coords.append([exterior_coords])
-        return ee.Geometry.MultiPolygon(all_polygons_coords)
-
-    def get_ee_geometry(self, geometry):
-        if isinstance(geometry, shapely.geometry.Polygon):
-            return self.shapely_to_ee_geometry_polygon(geometry)
-        elif isinstance(geometry, shapely.geometry.MultiPolygon):
-            return self.shapely_to_ee_geometry_multipolygon(geometry)
-
-    def geometry_iterator(self):
-        """iterate through the region collection shapefile and
-        yield the region code and geometry of each region"""
-        for index, row in self.region_collection_gdf.iterrows():
-            region_code = row[self.geolevel_column]
-            geometry = row['geometry']
-            ee_geometry = self.get_ee_geometry(geometry)
-            yield str(region_code), ee_geometry
-
-    @staticmethod
-    def convert_to_celsius(image):
-        return image \
-            .select(['LST_Day_1km', 'LST_Night_1km']) \
-            .multiply(0.02) \
-            .subtract(273.15)
-
-    def get_land_surface_temperature(self):
-        modis = ee\
-            .ImageCollection("MODIS/006/MOD11A2")\
-            .filterDate(self.start_date, self.end_date)\
-            .filterBounds(self.study_area)\
-            .map(self.convert_to_celsius)
-
-        # get the maximum and minimum temperature of each region
-        count = 1
-        total = len(self.region_collection_gdf)
-        for region_name, geometry in self.geometry_iterator():
-            def calculate_daily_min_max(image):
-                daily_min_max = image.reduceRegion(
-                    reducer=ee.Reducer.minMax(),
-                    geometry=geometry
-                )
-                return ee.Feature(None, daily_min_max)
-
-            daily_min_max_features = modis.map(calculate_daily_min_max)
-
-            for row in daily_min_max_features.getInfo()['features']:
-                tmax = row['properties']['LST_Day_1km_max']
-                tmin = row['properties']['LST_Night_1km_min']
-                self.dict_data[region_name][row["id"]]["tmax"] = tmax
-                self.dict_data[region_name][row["id"]]["tmin"] = tmin
-            print(f"region {region_name} temperature info obtained, {round(count*100/total, 1)}%.")
-            count += 1
-
-    def get_geometry(self, region):
-        """
-        Get the geometry of a region.
-        @param region: the name of the region.
-        @return: an ee.Geometry
-        """
-        row = self.gdf.loc[self.gdf[self.region_col] == region]
-        if not row.empty:
-            return row['geometry'].iloc[0]
-        else:
-            print(f"warning: no geometry data found for region: {region}")
-            return None
-
-    def save(self):
-
-        output_file_prefix = f"{config['geolevel_column']}_{config['start_date']}_{config['end_date']}"
-        config.update({
-            "output_geojson_directory": f"{output_file_prefix}.geojson",
-            "output_shp_directory": f"{output_file_prefix}.shp",
-            "output_file_prefix": f"{output_file_prefix}.nc"
-        })
-
-        if not os.path.exists(json_filedir):
-            with open(json_filedir, "w") as outfile:
-                json.dump(self.dict_data, outfile)
-
-        # Prepare the data for xarray
-        data = {
-            "tmax": [],
-            "tmin": []
-        }
-        index_data = {
-            "region": [],
-            "date": [],
-            "geometry": []
-        }
-
-        # Load temperature json data
-        if self.dict_data:
-            dict_data = self.dict_data
-        else:
-            with open(json_filedir, 'r') as f:
-                dict_data = json.load(f)
-
-        # Populate the data cube
-        count = 0
-        total = len(dict_data.keys())
-        index_data = {"region": [], "date": [], "geometry": []}
-        for region, date_dict in dict_data.items():
-            for date, temp_data in date_dict.items():
-                index_data["region"].append(region)
-                date = datetime.strptime(date, '%Y_%m_%d')
-                index_data["date"].append(pd.to_datetime(date))
-                data["tmax"].append(temp_data["tmax"])
-                data["tmin"].append(temp_data["tmin"])
-                # geometry = self.get_geometry(region)
-                # index_data["geometry"].append(geometry)
-            print(f"region {region} added to data cube, {round(count * 100 / total, 1)}%.")
-            count += 1
-
-        # Create a multi-indexed pandas DataFrame
-        multi_index = pd.MultiIndex.from_tuples(
-            list(zip(index_data["region"], index_data["date"])), names=["region", "date"]
-        )
-
-        df = pd.DataFrame(data, index=multi_index)
-
-        # Convert the DataFrame to a GeoDataFrame
-        # gdf = gpd.GeoDataFrame(df, geometry=index_data["geometry"])
-
-        # Convert the GeoDataFrame to a xarray Dataset
-        ds = df.to_xarray()
-
-        # Save the xarray Dataset as a NetCDF file
-        ds.to_netcdf(netcdf_dir)
-
-    def save(self, output_file_format):
-        pass
-
-
-if __name__ == '__main__':
-    def main():
-        # data_source = "modis"
-        region_collection_shp = "sa2_nsw.shp"
-        geolevel_column = "SA2_MAIN16"
-        start_date = "2019-07-01"
-        end_date = "2020-07-01"
-        output_file_format = ["netcdf"]
-
-        ModisLST(region_collection_shp,
-                 geolevel_column,
-                 start_date,
-                 end_date)\
-            .save(output_file_format)
-
-    main()
+    processor = ModisDataProcessor(product, region_collection_shp, geo_level_column,
+                                   start_date, end_date, scale)
+    processor.fetch_data()
+    processor.save_shapefile(shapefile_name)
+    processor.save_netcdf(netcdf_name)
