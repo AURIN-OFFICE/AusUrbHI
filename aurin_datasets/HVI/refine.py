@@ -3,8 +3,8 @@ import geopandas as gpd
 from tqdm import tqdm
 
 
-def refine()
-
+def refine():
+    pass
 
 def refine_abs_2016():
     boundary_file = "../../_data/boundary_data/sa1_nsw.shp"
