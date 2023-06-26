@@ -19,6 +19,7 @@ def refine_abs_2016():
         refined_data = data[data[data_matching_column].isin(boundary_data[boundary_matching_column])]
         refined_data.to_file(output_file)
 
+
 def refine_abs_2021():
     boundary_file = "../../_data/boundary_data/sa1_nsw.shp"
     boundary_data = gpd.read_file(boundary_file)
@@ -36,5 +37,18 @@ def refine_abs_2021():
         refined_data.to_file(output_file)
 
 
+def refine_osm():
+    pass
+
+
+def refine_other_abs():
+    pass
+
+
+def phidu_natsem():
+    pass
+
+
 if __name__ == "__main__":
     # refine_abs_2016()
+    refine_abs_2021()
