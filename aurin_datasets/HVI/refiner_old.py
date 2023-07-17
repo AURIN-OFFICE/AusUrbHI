@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-class RefineGeoData:
+class RefineStudyArea:
     def __init__(self,
                  study_area_file: str,
                  study_area_matching_column: str,
@@ -44,7 +44,6 @@ class RefineGeoData:
 
 
 if __name__ == "__main__":
-    # change the variables
     study_area_file = "../../_data/study_area/sa1_nsw.shp"
     study_area_matching_column = "SA1_MAIN16"
     data_file = "../../_data/study_area/datasource-AU_Govt_ABS-UoM_AURIN_DB_3_seifa_ieo_aust_sa1_2011.json"
@@ -52,7 +51,7 @@ if __name__ == "__main__":
     output_file = f"refined_{data_file.split('/')[-1].split('.')[0]}.shp"
     inspect = True
 
-    refiner = RefineGeoData(study_area_file,
+    refiner = RefineStudyArea(study_area_file,
                             study_area_matching_column,
                             data_file,
                             data_area_matching_column)
