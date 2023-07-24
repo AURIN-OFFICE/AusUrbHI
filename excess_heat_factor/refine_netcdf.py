@@ -8,13 +8,16 @@ from shapely.geometry import mapping
 # netcdf so it only contains raster cells that intersects with all the defined
 # SA1 regions from the shapefile.
 
-shapefile = gpd.read_file('../_data/study area/ausurbhi_study_area_2021.shp')
-netcdf = xr.open_dataset('../_data/longpaddock_silo_lst/max/2016.max_temp.nc')
-netcdf = netcdf.rio.write_crs("EPSG:4326")
+shapefile = gpd.read_file('../_data/study area/ausurbhi_study_area_2021.shp', crs="epsg:7844")
+netcdf = xr.open_dataset('../_data/longpaddock_silo_lst/max/2016_2021_max_temp.nc')
+netcdf.rio.set_spatial_dims(x_dim="lon", y_dim="lat", inplace=True)
+netcdf = netcdf.rio.write_crs("EPSG:7844", inplace=True)
 
-clipped = []
-for _, row in shapefile.iterrows():
-    clipped.append(netcdf.rio.clip([row['geometry']]))
-clipped_netcdf = xr.concat(clipped, dim='SA1')
+# unbuffered version
+# clipped = netcdf.rio.clip(shapefile.geometry.apply(mapping), shapefile.crs)
+# clipped.to_netcdf('../_data/longpaddock_silo_lst/ausurbhi_study_area_2021_clipped_unbuffered.nc')
 
-clipped_netcdf.to_netcdf('../_data/longpaddock_silo_lst/max/clipped_2016_2021_max_temp.nc')
+# buffered version
+shapefile_buffered = shapefile.buffer(0.05)
+clipped = netcdf.rio.clip(shapefile_buffered.geometry.apply(mapping), shapefile.crs)
+clipped.to_netcdf('../_data/longpaddock_silo_lst/ausurbhi_study_area_2021_clipped_buffered.nc')
