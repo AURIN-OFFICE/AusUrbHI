@@ -1,31 +1,59 @@
-import netCDF4
+import netCDF4 as nc
 import numpy as np
+import xarray as xr
 import rasterio
 from rasterio.features import geometry_mask
 from shapely.geometry import shape
 import geopandas as gpd
+from tqdm import tqdm
+from osgeo import gdal, ogr, osr
 
 gdf = gpd.read_file('../_data/study area/ausurbhi_study_area_2021.shp')
-nc = netCDF4.Dataset('../_data/longpaddock_silo_lst/EHF_heatwaves____daily.nc')
-data = nc.variables['EHF'][1459]
+dataset = nc.Dataset('../_data/longpaddock_silo_lst/EHF_heatwaves____daily.nc')
+# 1459; 7844
 
-# Create a new GeoDataFrame to store the results
-new_gdf = gpd.GeoDataFrame(columns=['geometry', 'max_value'], crs=gdf.crs)
+# Assume that the data variable is named 'precipitation'
+data = dataset.variables['EHF'][1459]
 
-# Loop over each polygon in the shapefile
-for i, row in gdf.iterrows():
-    # Create a mask for the current polygon
-    mask = geometry_mask([shape(row['geometry'])], transform=rasterio.transform.from_origin(0, 0, 1, 1), out_shape=data.shape, invert=True)
+# Create a raster dataset in memory
+mem_drv = gdal.GetDriverByName('MEM')
+out_ds = mem_drv.Create('', data.shape[1], data.shape[0], 1, gdal.GDT_Float32)
 
-    # Apply the mask to the netCDF data
-    masked_data = np.ma.array(data, mask=mask)
+# Write data to the raster dataset
+out_band = out_ds.GetRasterBand(1)
+out_band.WriteArray(data)
 
-    # Find the maximum value of the intersecting cells
-    max_value = masked_data.max()
+# Set up spatial reference system (SRS)
+srs = osr.SpatialReference()
+# The projection could be different depending on your data
+srs.ImportFromEPSG(7844)
+out_ds.SetProjection(srs.ExportToWkt())
 
-    # Add the result to the new GeoDataFrame
-    new_gdf = new_gdf._append({'geometry': row['geometry'], 'max_value': max_value}, ignore_index=True)
+# Convert raster to vector
+mem_drv = ogr.GetDriverByName('Memory')
+out_ds2 = mem_drv.CreateDataSource('out')
+out_layer = out_ds2.CreateLayer('polygonized', srs=srs)
+gdal.Polygonize(out_band, None, out_layer, -1, [], callback=None)
 
-# Save the new shapefile
-new_gdf.to_file('../_data/longpaddock_silo_lst/new_shapefile.shp')
+# Convert to a geopandas dataframe
+geoms = []
+for feature in out_layer:
+    geom = feature.GetGeometryRef()
+    geoms.append(geom.ExportToWkt())
+
+gdf = gpd.GeoDataFrame(geoms, columns=['geometry'])
+
+
+# Add function to check if geometry has Z coordinate
+def check_3d(geom):
+    # Checking if 'Z' is in the WKT string representation of the geometry
+    return ' Z ' in geom
+
+
+# Add a new column 'has_z' to the DataFrame
+gdf['has_z'] = gdf['geometry'].apply(check_3d)
+
+
+# Convert to a shapefile
+gdf.to_file('../_data/longpaddock_silo_lst/new_shapefile.shp')
 
