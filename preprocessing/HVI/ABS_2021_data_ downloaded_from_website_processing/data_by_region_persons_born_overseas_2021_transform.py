@@ -18,5 +18,5 @@ csv = csv.rename(columns={'code': 'SA2_CODE21'})
 # Merge the shapefile and csv data
 merged = pd.merge(csv, shp, on='SA2_CODE21', how='inner')
 merged = gpd.GeoDataFrame(merged, geometry='geometry')
-merged.to_file(r'..\..\_data\AusUrbHI HVI data\other ABS datasets'
+merged.to_file(r'..\..\_data\AusUrbHI HVI data\other ABS cleansing_scripts'
                r'\abs_data_by_region_persons_born_overseas_asgs_sa2_2021.geojson', driver='GeoJSON')

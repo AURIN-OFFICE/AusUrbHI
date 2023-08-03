@@ -11,4 +11,4 @@ shp['SA1_CODE21'] = shp['SA1_CODE21'].astype(str)
 
 merged = pd.merge(csv, shp, on='SA1_CODE21', how='inner')
 merged = gpd.GeoDataFrame(merged, geometry='geometry')
-merged.to_file(r'..\..\_data\AusUrbHI HVI data\other ABS datasets\seifa_irsad_aust_sa1_2021.shp')
+merged.to_file(r'..\..\_data\AusUrbHI HVI data\other ABS cleansing_scripts\seifa_irsad_aust_sa1_2021.shp')

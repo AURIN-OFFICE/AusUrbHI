@@ -8,7 +8,7 @@ def calculate_EHF(max_temp_file, min_temp_file):
     min_temp_ds = xr.open_dataset(min_temp_file)
 
     # Extract the temperature variables
-    # Replace 'temperature' with the actual name of the temperature variable in your datasets
+    # Replace 'temperature' with the actual name of the temperature variable in your cleansing_scripts
     max_temp = max_temp_ds['max_temp']
     min_temp = min_temp_ds['min_temp']
 
