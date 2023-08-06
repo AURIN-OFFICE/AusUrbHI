@@ -9,15 +9,20 @@ for filename in tqdm(files,
                      total=len(files)):
     full_filepath = os.path.join(dir_path, filename)
 
+    year = "2016"
+
     # NATSEM
     if "sa2" in filename:
         study_area_matching_column = "SA2_MAIN16"
         data_matching_column = "sa2_code16"
+
     # PHIDU
     else:
         assert "pha" in filename
+        study_area_matching_column = "pha_code"
+        data_matching_column = "pha_code"
 
-    Cleanser(full_filepath).refine_by_study_area("2016",
+    Cleanser(full_filepath).refine_by_study_area(year,
                                                  "..\\_data\\AusUrbHI HVI data processed\\PHIDU and NATSEM datasets\\",
                                                  study_area_matching_column,
                                                  data_matching_column)
