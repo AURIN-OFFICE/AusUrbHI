@@ -10,9 +10,9 @@ for filename in tqdm(files,
     full_filepath = os.path.join(dir_path, filename)
 
     if "2021" in filename:
-        year = 2021
+        year = "2021"
     else:
-        year = 2016
+        year = "2016"
 
     # SEIFA index
     if "sa1" in filename:

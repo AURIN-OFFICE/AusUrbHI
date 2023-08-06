@@ -19,11 +19,11 @@ class Cleanser:
         """refine data by study area boundary shapefile"""
 
         # decide which study area to use
-        if year == 2016:
+        if year == "2016":
             study_area_path = "..\\_data\\study area\\sa1_nsw.shp"
             study_area_matching_column = "SA1_MAIN16" if not study_area_matching_column else study_area_matching_column
             data_matching_column = "sa1_main16" if not data_matching_column else data_matching_column
-        elif year == 2021:
+        elif year == "2021":
             study_area_path = "..\\_data\\study area\\ausurbhi_study_area_2021.shp"
             study_area_matching_column = "SA1_CODE21" if not study_area_matching_column else study_area_matching_column
             data_matching_column = "SA1_CODE_2" if not data_matching_column else data_matching_column
@@ -58,8 +58,7 @@ class Cleanser:
     def convert_to_sa1(self):
         pass
 
-    def convert_to_2021_study_area(self,
-                                   correspondence_file_path="..\\_data\\study area\\CG_SA1_2016_SA1_2021.csv"):
+    def convert_to_2021_study_area(self, correspondence_file_path="..\\_data\\study area\\CG_SA1_2016_SA1_2021.csv"):
         with open(correspondence_file_path, 'r') as f:
             correspondence_file = csv.reader(f)
 
