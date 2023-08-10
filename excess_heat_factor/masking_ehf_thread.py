@@ -47,7 +47,6 @@ def year_to_indices(year):
     year_end = year_start + 365
     return year_start, year_end
 
-
 # Open the NetCDF file
 nc_file = xr.open_dataset("..\\_data\\AusUrbHI HVI data unprocessed\\Longpaddock SILO LST\\"
                           "merged_heatwaves.nc")
