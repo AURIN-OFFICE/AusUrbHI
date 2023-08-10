@@ -18,7 +18,7 @@ nc_file = xr.open_dataset("..\\_data\\AusUrbHI HVI data unprocessed\\Longpaddock
 nc_file = nc_file.rio.write_crs("EPSG:7844", inplace=True)
 
 # Open the shapefile
-shapefile = gpd.read_file('..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp')[:1]
+shapefile = gpd.read_file('..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp')
 
 # Create a copy of the shapefile to modify
 output_shapefile = shapefile[['SA1_MAIN16', 'geometry']].copy()
@@ -48,8 +48,13 @@ for i, row in tqdm(shapefile.iterrows(), total=len(shapefile), desc="Clipping po
                     value_dict = {k: v for k, v in enumerate(value_list_year)
                                   if v != "0 days" and v != "0.0" and v != "0"}
                 value = json.dumps(value_dict)
-                if value != "{}":
-                    output_shapefile.loc[i, f"{column}_{str(year)[-2:]}"] = value
+
+                # split data into multiple columns if it is too long
+                if value != "{}" and len(value) > 0:
+                    chunks = [value[i:i + 254] for i in range(0, len(value), 254)]
+                    for idx, chunk in enumerate(chunks, 1):
+                        suffix = str(year)[-2:] if idx == 1 else f"{str(year)[-2:]}_{idx}"
+                        output_shapefile.loc[i, f"{column}{suffix}"] = chunk
 
 # save the shapefile
 output_shapefile.to_file(f"..\\_data\\AusUrbHI HVI data processed\\Longpaddock SILO LST\\merged_heatwaves.shp")
