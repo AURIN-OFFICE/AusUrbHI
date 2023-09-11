@@ -63,18 +63,3 @@ class Cleanser:
         output_path = output_dir + self.data_name + "_study_area_refined.shp"
         refined_data.to_file(output_path)
 
-    def refine_attribute(self):
-        pass
-
-    def pha_to_sa2(self):
-        pass
-
-    def sa2_to_sa1(self):
-        pass
-
-    def convert_2016_sa1_to_2021(self, correspondence_file_path="..\\_data\\study area\\CG_SA1_2016_SA1_2021.csv"):
-        with open(correspondence_file_path, 'r') as f:
-            correspondence_file = csv.reader(f)
-
-    def normalization(self):
-        pass
