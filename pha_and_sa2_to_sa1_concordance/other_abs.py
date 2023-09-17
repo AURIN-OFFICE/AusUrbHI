@@ -36,6 +36,7 @@ for filename in os.listdir(folder_path):
             result_gdf = gdf.copy()
 
         # save the file
+        result_gdf = mapper.cleanse_geometry(result_gdf, study_area_gdf)
         output_filename = filename.replace('_2021_concordance.shp', '_2021_sa1_concordance.shp')
         output_path = os.path.join(output_folder_path, output_filename)
         result_gdf.to_file(output_path)

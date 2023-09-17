@@ -20,7 +20,7 @@ for filename in os.listdir(folder_path):
     if filename.endswith(".shp"):
         file_path = os.path.join(folder_path, filename)
 
-        if "2021" not in filename and "2020" not in filename:
+        if "2021" not in filename:
             # SEIFA index
             if "sa1" in filename:
                 csv_df = sa1_csv_df

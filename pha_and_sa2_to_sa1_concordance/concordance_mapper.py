@@ -135,3 +135,27 @@ class ConcordanceMapper:
         # Create a new GeoDataFrame
         new_gdf = gpd.GeoDataFrame(new_rows, geometry='geometry')
         return new_gdf
+
+    @staticmethod
+    def cleanse_geometry(gdf, study_area_gdf):
+        """cleanse SA2 and SA1 geometry to SA1 from study area shp based on SA1_CODE21"""
+        # Ensure the SA1_CODE21 columns are of the same type for proper comparison
+        gdf['SA1_CODE21'] = gdf['SA1_CODE21'].astype(str)
+        study_area_gdf['SA1_CODE21'] = study_area_gdf['SA1_CODE21'].astype(str)
+
+        # Assert that all entries in gdf are also present in study_area_gdf
+        assert set(gdf['SA1_CODE21']).issubset(
+            set(study_area_gdf['SA1_CODE21'])), "Not all SA1_CODE21 values in gdf are present in study_area_gdf."
+
+        # Merge the two GeoDataFrames based on SA1_CODE21, updating geometry and other attributes.
+        merged_gdf = gdf.merge(study_area_gdf[['SA1_CODE21', 'geometry']], on='SA1_CODE21', how='left',
+                               suffixes=('', '_new'))
+
+        # At this point, given the assertion, 'geometry_new' should be non-null for all rows.
+        # Update the geometry.
+        merged_gdf['geometry'] = merged_gdf['geometry_new']
+
+        # Drop the new geometry column
+        merged_gdf.drop(columns=['geometry_new'], inplace=True)
+
+        return merged_gdf
