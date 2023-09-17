@@ -1,52 +1,41 @@
 import os
-import pandas as pd
 import geopandas as gpd
 from concordance_mapper import ConcordanceMapper
 
-sa1_csv_path = "../_data/study area/CG_SA1_2016_SA1_2021.csv"
-sa1_csv_df = pd.read_csv(sa1_csv_path)
+folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
+study_area_shp_path = "../_data/study area/ausurbhi_study_area_2021.shp"
+study_area_gdf = gpd.read_file(study_area_shp_path)
+output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 and sa1 concordance"
 
-sa2_csv_path = "../_data/study area/CG_SA2_2016_SA2_2021.csv"
-sa2_csv_df = pd.read_csv(sa2_csv_path)
+mapper = ConcordanceMapper()
 
-study_area_path = "../_data/study area/ausurbhi_study_area_2021.shp"
-study_area_df = gpd.read_file(study_area_path)
+# create a dictionary of sa2 codes and number of SA1s in each sa2
+sa2_has_number_of_sa1_dict = mapper.create_sa2_has_number_of_sa1_dict()
 
-folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets"
 for filename in os.listdir(folder_path):
-    if filename.endswith(".shp") and "2021" not in filename and "2020" not in filename:
-        file_path = os.path.join(folder_path, filename)
+    mapper.filename = filename
 
-        # SEIFA index
-        if "sa1" in filename:
-            csv_df = sa1_csv_df
-            csv_16_column = "SA1_MAINCODE_2016"
-            csv_21_column = "SA1_CODE_2021"
-            shp_16_field = "SA1_MAIN16"
-            shp_21_field = "SA1_CODE21"
-            exclude_division_field_list = ['Shape', 'id', 'sa1_7dig16', 'SA1_MAIN16', 'geometry']
-            output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
-        # non SEIFA
-        else:
-            assert "sa2" in filename
-            csv_df = sa2_csv_df
-            csv_16_column = "SA2_MAINCODE_2016"
-            csv_21_column = "SA2_CODE_2021"
-            shp_16_field = "SA2_MAIN16"
-            shp_21_field = "SA2_CODE21"
+    if filename.endswith(".shp"):
+        file_path = os.path.join(folder_path, filename)
+        gdf = gpd.read_file(file_path)
+
+        if "sa2" in filename:
             exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16',
                                            'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
                                            'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
-                                           'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry']
-            output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
+                                           'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry',
+                                           'index', 'STATE_CODE', 'STATE_NAME', 'GCCSA_CODE',
+                                           'GCCSA_NAME', 'SA4_CODE_2', 'SA4_NAME_2', 'SA3_CODE_2',
+                                           'SA3_NAME_2', 'SA2_CODE_2', 'SA2_NAME_2', 'label', 'year']
 
-        ConcordanceMapper(csv_df,
-                          study_area_df,
-                          csv_16_column,
-                          csv_21_column,
-                          filename,
-                          file_path,
-                          shp_16_field,
-                          shp_21_field,
-                          exclude_division_field_list,
-                          output_folder_path).map()
+            # convert SA2 shp to SA1 shp and divide SA2 data value by number of SA1s in SA2
+            result_gdf = mapper.convert_sa2_to_sa1_and_divide(gdf, study_area_gdf,
+                                                              exclude_division_field_list)
+
+        else:
+            result_gdf = gdf.copy()
+
+        # save the file
+        output_filename = filename.replace('_2021_concordance.shp', '_2021_sa1_concordance.shp')
+        output_path = os.path.join(output_folder_path, output_filename)
+        result_gdf.to_file(output_path)

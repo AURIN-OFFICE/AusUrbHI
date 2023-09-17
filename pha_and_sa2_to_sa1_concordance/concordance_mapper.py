@@ -19,7 +19,6 @@ class ConcordanceMapper:
         # Loop through each row in the DataFrame
         for index, row in csv_data.iterrows():
             pha_code = row['PHA code']
-            sa2_code = row['SA2 code']
 
             # If PHA code is not already in dictionary, initialize with 0
             if pha_code not in pha_2_sa2_dict:
@@ -39,7 +38,6 @@ class ConcordanceMapper:
 
         # Loop through each row in the GeoDataFrame
         for index, row in gdf.iterrows():
-            sa1_code = row['SA1_CODE21']
             sa2_code = row['SA2_CODE21']
 
             # Update the dictionary count
@@ -50,8 +48,19 @@ class ConcordanceMapper:
 
         self.sa2_2_sa1_dict = sa2_to_sa1_dict
 
+    @staticmethod
+    def divide_value(value, divisor, code, column):
+        """Divide the field value by the number of SA2s/SA1s in PHA/SA2."""
+        try:
+            value = float(str(value).replace(",", ""))
+            return round(value / divisor, 2)
+        except ValueError:
+            if all(sub not in str(value) for sub in ['~', '-', '**', '*', 'nan']):
+                tqdm.write(f"ValueError: {value} from {code}:{column} is not a number")
+            return value
+
     def divide_pha_data_by_number_of_sa2(self, gdf, exclude_division_field_list):
-        """Divide pha data value by number of sa2s in pha. GDF is already at sa2 level."""
+        """Divide pha data value by number of SA2s in pha. GDF is already at sa2 level."""
         new_gdf = gdf.copy()
 
         # Loop through each row in the GeoDataFrame
@@ -70,15 +79,11 @@ class ConcordanceMapper:
             for field in new_gdf.columns:
 
                 # Skip the fields that should not be divided
-                if field in exclude_division_field_list:
+                if field in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY']:
                     continue
 
                 # Divide the field value by the number of SA2s
-                try:
-                    new_gdf.at[idx, field] = round(float(row[field]) / num_sa2s, 2)
-                except ValueError:
-                    if all(sub not in str(row[field]) for sub in ['~', '**', 'nan']):
-                        print(f"ValueError: {row[field]} from {pha_code}:{field} is not a number")
+                new_gdf.at[idx, field] = self.divide_value(row[field], num_sa2s, pha_code, field)
 
         # Remove duplicate entries
         new_gdf = new_gdf.drop_duplicates()
@@ -86,36 +91,47 @@ class ConcordanceMapper:
         return new_gdf
 
     def convert_sa2_to_sa1_and_divide(self, sa2_gdf, study_area_gdf, exclude_division_field_list):
-        """convert sa2 shp to sa1 and divide data value by number of sa1s in sa2"""
-        # Perform a join between study_area_gdf and sa2_gdf based on 'SA2_CODE21'
-        merged_gdf = pd.merge(study_area_gdf, sa2_gdf, on="SA2_CODE21", how="left", suffixes=('_sa1', '_sa2'))
+        """Convert sa2 shp to sa1 and divide data value by number of sa1s in sa2."""
 
-        # Create an empty list to store the columns that need to be divided
-        columns_to_divide = []
+        # Initialize an empty list to hold rows for the new GeoDataFrame
+        new_rows = []
 
-        # Loop through the columns to identify which ones should be divided
-        for column in sa2_gdf.columns:
-            if column not in exclude_division_field_list and column != 'SA2_CODE21' and column != 'geometry':
-                columns_to_divide.append(column)
-
-        # Loop through the rows to perform the division based on sa2_to_sa1_dict
-
-        for index, row in tqdm(merged_gdf.iterrows(), total=len(merged_gdf), desc=f"SA2 to SA1 for {self.filename}"):
+        # Loop through each row in study_area_gdf
+        for index, row in tqdm(study_area_gdf.iterrows(), total=len(study_area_gdf),
+                               desc=f"SA2 to SA1 for {self.filename}"):
+            sa1_code = row['SA1_CODE21']
             sa2_code = row['SA2_CODE21']
-            divisor = self.sa2_2_sa1_dict.get(sa2_code, 1)  # Get the divisor, if not found then use 1
-            for column in columns_to_divide:
-                if pd.notnull(row[column]):
-                    merged_gdf.at[index, column] = round(float(row[column]) / divisor, 2)
 
-        # Drop unwanted columns that are duplicated during the merge operation
-        for column in merged_gdf.columns:
-            if column.endswith('_sa1'):
-                merged_gdf.drop(columns=[column], inplace=True)
+            # Skip the row if SA2_CODE21 is empty or None
+            if pd.isna(sa2_code) or not sa2_code:
+                continue
+
+            # test
+            filtered_df = sa2_gdf[sa2_gdf['SA2_CODE21'].astype(str) == str(sa2_code)]
+            if filtered_df.empty:
+                tqdm.write(f"Warning: SA2_CODE21 {sa2_code} from study area not found in {self.filename}.")
+                continue
+            sa2_row = filtered_df.iloc[0]
+
+            # Get corresponding row in sa2_gdf using sa2_code
+            sa2_row = sa2_gdf[sa2_gdf['SA2_CODE21'].astype(str) == str(sa2_code)].iloc[0]
+
+            # Create a new dictionary to hold the new row
+            new_row_dict = {'SA1_CODE21': sa1_code, 'SA2_CODE21': sa2_code, 'geometry': row['geometry']}
+
+            # Add fields from sa2_row, possibly dividing them
+            for field in sa2_gdf.columns:
+                value = sa2_row[field]
+
+                # Divide the value if the field is not in exclude_division_field_list
+                if field not in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY']:
+                    assert sa2_code in self.sa2_2_sa1_dict, f"sa2_code {sa2_code} not in sa2_2_sa1_dict"
+                    value = self.divide_value(value, self.sa2_2_sa1_dict[sa2_code], sa2_code, field)
+
+                new_row_dict[field] = value
+
+            new_rows.append(new_row_dict)
 
         # Create a new GeoDataFrame
-        new_gdf = gpd.GeoDataFrame(merged_gdf, geometry='geometry')
-
-        # Save the GeoDataFrame as a new shapefile
-        new_gdf.to_file("new_shapefile.shp")
-
+        new_gdf = gpd.GeoDataFrame(new_rows, geometry='geometry')
         return new_gdf
