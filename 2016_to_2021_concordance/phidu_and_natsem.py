@@ -21,7 +21,7 @@ for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
 
         if "phidu" in filename:
-            exclude_division_field_list = ['Shape', 'id', 'fid_1', 'pha_code', 'pha_name', 'SA2_MAIN16', 'geometry']
+            exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA2_MAIN16', 'geometry']
         else:
             exclude_division_field_list = ['Shape', 'id', 'SA2_MAIN16', 'sa2_name16', 'geometry']
 
