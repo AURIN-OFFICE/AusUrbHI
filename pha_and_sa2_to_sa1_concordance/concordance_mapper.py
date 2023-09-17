@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+from geopandas import GeoDataFrame
 from tqdm import tqdm
 
 
@@ -56,7 +57,7 @@ class ConcordanceMapper:
             return round(value / divisor, 2)
         except ValueError:
             if all(sub not in str(value) for sub in ['~', '-', '**', '*', 'nan']):
-                tqdm.write(f"ValueError: {value} from {code}:{column} is not a number")
+                print(f"ValueError: {value} from {code}:{column} is not a number")
             return value
 
     def divide_pha_data_by_number_of_sa2(self, gdf, exclude_division_field_list):
@@ -79,7 +80,7 @@ class ConcordanceMapper:
             for field in new_gdf.columns:
 
                 # Skip the fields that should not be divided
-                if field in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY']:
+                if field in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY', 'RATIO']:
                     continue
 
                 # Divide the field value by the number of SA2s
@@ -109,7 +110,7 @@ class ConcordanceMapper:
             # test
             filtered_df = sa2_gdf[sa2_gdf['SA2_CODE21'].astype(str) == str(sa2_code)]
             if filtered_df.empty:
-                tqdm.write(f"Warning: SA2_CODE21 {sa2_code} from study area not found in {self.filename}.")
+                print(f"Warning A: SA2_CODE21 {sa2_code} from study area not found in {self.filename}.")
                 continue
             sa2_row = filtered_df.iloc[0]
 
@@ -124,7 +125,7 @@ class ConcordanceMapper:
                 value = sa2_row[field]
 
                 # Divide the value if the field is not in exclude_division_field_list
-                if field not in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY']:
+                if field not in exclude_division_field_list + ['INDIV_QLTY', 'OVR_QLTY', 'RATIO']:
                     assert sa2_code in self.sa2_2_sa1_dict, f"sa2_code {sa2_code} not in sa2_2_sa1_dict"
                     value = self.divide_value(value, self.sa2_2_sa1_dict[sa2_code], sa2_code, field)
 
@@ -136,26 +137,24 @@ class ConcordanceMapper:
         new_gdf = gpd.GeoDataFrame(new_rows, geometry='geometry')
         return new_gdf
 
-    @staticmethod
-    def cleanse_geometry(gdf, study_area_gdf):
+    def cleanse_geometry(self, gdf, study_area_gdf):
         """cleanse SA2 and SA1 geometry to SA1 from study area shp based on SA1_CODE21"""
         # Ensure the SA1_CODE21 columns are of the same type for proper comparison
         gdf['SA1_CODE21'] = gdf['SA1_CODE21'].astype(str)
         study_area_gdf['SA1_CODE21'] = study_area_gdf['SA1_CODE21'].astype(str)
 
-        # Assert that all entries in gdf are also present in study_area_gdf
-        assert set(gdf['SA1_CODE21']).issubset(
-            set(study_area_gdf['SA1_CODE21'])), "Not all SA1_CODE21 values in gdf are present in study_area_gdf."
+        # Create a dictionary from study_area_gdf for fast lookup
+        study_area_dict = study_area_gdf.set_index('SA1_CODE21')['geometry'].to_dict()
 
-        # Merge the two GeoDataFrames based on SA1_CODE21, updating geometry and other attributes.
-        merged_gdf = gdf.merge(study_area_gdf[['SA1_CODE21', 'geometry']], on='SA1_CODE21', how='left',
-                               suffixes=('', '_new'))
+        # Update the geometry in gdf based on the values in study_area_gdf
+        for index, row in gdf.iterrows():
+            sa1_code = row['SA1_CODE21']
+            new_geometry = study_area_dict.get(sa1_code)
+            try:
+                assert new_geometry, f"Warning B: {sa1_code} from {self.filename} not found in study area shp"
+                gdf.at[index, 'geometry'] = new_geometry
+            except AssertionError as e:
+                print(e)
+                gdf.at[index, 'geometry'] = None  # Set geometry to None if assertion fails
 
-        # At this point, given the assertion, 'geometry_new' should be non-null for all rows.
-        # Update the geometry.
-        merged_gdf['geometry'] = merged_gdf['geometry_new']
-
-        # Drop the new geometry column
-        merged_gdf.drop(columns=['geometry_new'], inplace=True)
-
-        return merged_gdf
+        return gdf
