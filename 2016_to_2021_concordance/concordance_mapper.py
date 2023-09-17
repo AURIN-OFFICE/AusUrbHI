@@ -58,7 +58,7 @@ class ConcordanceMapper:
                     if col not in self.exclude_division_field_list:
                         try:
                             val = float(new_row[col])
-                            new_row[col] = round(val * match['RATIO_FROM_TO'])
+                            new_row[col] = round(val * match['RATIO_FROM_TO'], 1)
                         except ValueError:
                             pass
 

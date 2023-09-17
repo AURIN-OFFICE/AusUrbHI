@@ -54,7 +54,7 @@ class ConcordanceMapper:
         """Divide the field value by the number of SA2s/SA1s in PHA/SA2."""
         try:
             value = float(str(value).replace(",", ""))
-            return round(value / divisor, 2)
+            return round(value / divisor, 1)
         except ValueError:
             if all(sub not in str(value) for sub in ['~', '-', '**', '*', 'nan']):
                 print(f"ValueError: {value} from {code}:{column} is not a number")
@@ -157,4 +157,5 @@ class ConcordanceMapper:
                 print(e)
                 gdf.at[index, 'geometry'] = None  # Set geometry to None if assertion fails
 
+        gdf.crs = 'EPSG:4283'
         return gdf
