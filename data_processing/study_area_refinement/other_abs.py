@@ -2,7 +2,7 @@ import os
 from tqdm import tqdm
 from cleansing_scripts.cleanser import Cleanser
 
-dir_path = "..\\_data\\AusUrbHI HVI data unprocessed\\other ABS datasets"
+dir_path = "..\\..\\_data\\AusUrbHI HVI data unprocessed\\other ABS datasets"
 files = [i for i in os.listdir(dir_path) if i.endswith((".json", ".geojson", ".shp"))]
 for filename in tqdm(files,
                      desc="refine study area and convert to shapefile",
@@ -44,7 +44,7 @@ for filename in tqdm(files,
             data_matching_column = "sa2_main16"
 
     Cleanser(full_filepath).refine_by_study_area(year,
-                                                 "..\\_data\\AusUrbHI HVI data processed\\other ABS datasets\\",
+                                                 "..\\..\\_data\\AusUrbHI HVI data processed\\other ABS datasets\\",
                                                  study_area_matching_column,
                                                  data_matching_column)
 

@@ -31,6 +31,12 @@ Scripts for obtaining and derive the study area data for HVI and urban liveabili
     <em>Refined data</em>
 </p>
 
+## Data Preprocessing and Cleansing
+1. Obtain data from sources such as the [AURIN Data Provider](https://data.aurin.org.au/) or the [ABS GeoPackages downloader](https://www.abs.gov.au/census/find-census-data/geopackages?release=2021&geography=AUST&table=G01&gda=GDA2020). Make sure the data is in shapefile or geojson format.
+2. study area refinement using scripts under /study_area_refinement.
+3. convert to 2021 ASGS standard using scripts under /2016_to_2021_concordance with concordance files.
+4. perform disaggregation to ensure all data is at SA1 level using scripts under /disaggregation. Three disaggregation algorithms are used: divided by number of subdivision regions, by population, and no division.
+
 ## Building Point Cloud Processing
 The building footprint processing methodology consists of three steps. 
 1.	Hole Removal: A BuildingHoleRemover class is initialized with an input shapefile of building polygons. It reads the shapefile, removes small holes from the building polygons based on a minimum area, and saves the processed polygons to a new shapefile.

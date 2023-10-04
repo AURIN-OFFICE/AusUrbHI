@@ -1,6 +1,6 @@
 import json
 
-file_path = "..\\_data\\AusUrbHI HVI data unprocessed\\OSM and HealthDirect\\HealthcareService_combined.txt"
+file_path = "..\\..\\_data\\AusUrbHI HVI data unprocessed\\OSM and HealthDirect\\HealthcareService_combined.txt"
 
 try:
     with open(file_path, 'r', encoding='utf-8') as file:

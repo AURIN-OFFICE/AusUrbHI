@@ -4,17 +4,17 @@ import pandas as pd
 import geopandas as gpd
 from concordance_mapper import ConcordanceMapper
 
-sa1_csv_path = "../_data/study area/CG_SA1_2016_SA1_2021.csv"
+sa1_csv_path = "../../_data/study area/CG_SA1_2016_SA1_2021.csv"
 sa1_csv_df = pd.read_csv(sa1_csv_path)
 
-sa2_csv_path = "../_data/study area/CG_SA2_2016_SA2_2021.csv"
+sa2_csv_path = "../../_data/study area/CG_SA2_2016_SA2_2021.csv"
 sa2_csv_df = pd.read_csv(sa2_csv_path)
 
-study_area_path = "../_data/study area/ausurbhi_study_area_2021.shp"
+study_area_path = "../../_data/study area/ausurbhi_study_area_2021.shp"
 study_area_df = gpd.read_file(study_area_path)
 
-folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets"
-output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
+folder_path = "../../_data/AusUrbHI HVI data processed/other ABS datasets"
+output_folder_path = "../../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
 
 for filename in os.listdir(folder_path):
     if filename.endswith(".shp"):

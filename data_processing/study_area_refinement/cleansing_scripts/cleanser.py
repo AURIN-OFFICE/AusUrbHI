@@ -21,9 +21,9 @@ class Cleanser:
 
         # decide which study area to use
         if year == "2016":
-            study_area_path = "..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp"
+            study_area_path = "..\\..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp"
         elif year == "2021":
-            study_area_path = "..\\_data\\study area\\ausurbhi_study_area_2021.shp"
+            study_area_path = "..\\..\\_data\\study area\\ausurbhi_study_area_2021.shp"
         else:
             raise ValueError("Year must be either 2016 or 2021.")
 

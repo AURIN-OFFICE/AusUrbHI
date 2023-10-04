@@ -7,15 +7,15 @@ csv_16_column = "SA2_MAINCODE_2016"
 csv_21_column = "SA2_CODE_2021"
 shp_16_field = "SA2_MAIN16"
 shp_21_field = "SA2_CODE21"
-output_folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 concordance"
+output_folder_path = "../../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 concordance"
 
-csv_path = "../_data/study area/CG_SA2_2016_SA2_2021.csv"
+csv_path = "../../_data/study area/CG_SA2_2016_SA2_2021.csv"
 csv_df = pd.read_csv(csv_path)
 
-study_area_path = "../_data/study area/ausurbhi_study_area_2021.shp"
+study_area_path = "../../_data/study area/ausurbhi_study_area_2021.shp"
 study_area_df = gpd.read_file(study_area_path)
 
-folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets"
+folder_path = "../../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets"
 for filename in os.listdir(folder_path):
     if filename.endswith(".shp"):
         file_path = os.path.join(folder_path, filename)
