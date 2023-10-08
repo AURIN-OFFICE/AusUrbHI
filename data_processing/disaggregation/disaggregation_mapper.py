@@ -24,6 +24,7 @@ class DisaggregationMapper:
     @staticmethod
     def convert_sa2_gdf_to_sa1(sa2_gdf: gpd.GeoDataFrame,
                                study_area_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        sa2_gdf = sa2_gdf.drop_duplicates()
         merged_df: pd.DataFrame = \
             study_area_gdf[['SA1_CODE21', 'SA2_CODE21']].merge(sa2_gdf, on='SA2_CODE21', how='left')
         merged_gdf: gpd.GeoDataFrame = gpd.GeoDataFrame(merged_df, geometry=study_area_gdf.geometry)
