@@ -1,7 +1,7 @@
 import os
 import json
 import geopandas as gpd
-from concordance_mapper import ConcordanceMapper
+from disaggregation_mapper import DisaggregationMapper
 
 folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
 study_area_gdf = gpd.read_file("../_data/study area/ausurbhi_study_area_2021.shp")
@@ -9,7 +9,7 @@ output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by
 
 with open('population_dicts.json', 'r') as f:
     sa1_population_ratio_in_sa2_dict, sa2_population_ratio_in_pha_dict = json.load(f)
-mapper = ConcordanceMapper()
+mapper = DisaggregationMapper()
 
 # create a dictionary of sa2 codes and number of SA1s in each sa2
 sa2_has_number_of_sa1_dict = mapper.create_sa2_has_number_of_sa1_dict()

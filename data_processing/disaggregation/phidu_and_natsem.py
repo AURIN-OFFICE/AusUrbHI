@@ -1,13 +1,13 @@
 import os
 import geopandas as gpd
-from concordance_mapper import ConcordanceMapper
+from disaggregation_mapper import DisaggregationMapper
 
 folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 concordance"
 study_area_shp_path = "../_data/study area/ausurbhi_study_area_2021.shp"
 study_area_gdf = gpd.read_file(study_area_shp_path)
 output_folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 and sa1 concordance"
 
-mapper = ConcordanceMapper()
+mapper = DisaggregationMapper()
 
 # create a dictionary of pha codes and number of SA2s in each pha
 pha_has_number_of_sa2_dict = mapper.create_pha_has_number_of_sa2_dict()

@@ -1,17 +1,18 @@
+import json
 import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 
 
-class ConcordanceMapper:
-    def __init__(self, sa2_2_sa1_dict, pha_2_sa2_dict, filename=None):
-        self.sa2_2_sa1_dict = sa2_2_sa1_dict
-        self.pha_2_sa2_dict = pha_2_sa2_dict
+class DisaggregationMapper:
+    def __init__(self, filename=None):
+        with open('population_dicts.json', 'r') as f:
+            self.sa2_2_sa1_dict, self.pha_2_sa2_dict = json.load(f)
         self.filename = filename
 
     @staticmethod
-    def divide_value(value, divisor, code, column):
-        """Divide the field value by the number of SA2s/SA1s in PHA/SA2."""
+    def divider(value, divisor, code, column):
+        """Divide a field value by a divisor"""
         try:
             value = float(str(value).replace(",", ""))
             return round(value / divisor, 1)
