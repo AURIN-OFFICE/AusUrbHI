@@ -24,8 +24,13 @@ for filename in tqdm(os.listdir(folder_path),
         exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA1_CODE21', 'SA2_CODE21',
                                        'sa2_name16', 'geometry', 'INDIV_QLTY', 'OVR_QLTY', 'RATIO']
 
-        equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "PHA", "equal")
-        population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "PHA", "population")
+        if "phidu" in filename:
+            geolevel = 'PHA'
+        else:
+            geolevel = 'SA2'
+
+        equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, geolevel, "equal")
+        population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, geolevel, "population")
         no_divided_gdf = gdf.copy()
 
         # save the file
