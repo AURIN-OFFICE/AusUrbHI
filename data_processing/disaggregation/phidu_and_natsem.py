@@ -21,7 +21,7 @@ for filename in tqdm(os.listdir(folder_path),
         gdf = mapper.convert_sa2_gdf_to_sa1(gdf, study_area_gdf)
 
         # second, for each division method, divide and save shapefile
-        exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA2_CODE21',
+        exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA1_CODE21', 'SA2_CODE21',
                                        'sa2_name16', 'geometry', 'INDIV_QLTY', 'OVR_QLTY', 'RATIO']
 
         equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "PHA", "equal")

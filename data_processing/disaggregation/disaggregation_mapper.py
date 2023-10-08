@@ -1,14 +1,17 @@
 import json
+from typing import Tuple, List, Union
 import geopandas as gpd
+import pandas as pd
 
 
 class DisaggregationMapper:
-    def __init__(self):
+    def __init__(self) -> None:
         with open('population_dicts.json', 'r') as f:
             self.sa2_2_sa1_dict, self.pha_2_sa2_dict = json.load(f)
 
     @staticmethod
-    def formatted_divider(value, divisor):
+    def formatted_divider(value: Union[str, float],
+                          divisor: float) -> float:
         """Divide a field value by a divisor considering format"""
         try:
             value = float(str(value).replace(",", ""))
@@ -19,32 +22,40 @@ class DisaggregationMapper:
             return value
 
     @staticmethod
-    def convert_sa2_gdf_to_sa1(sa2_gdf, study_area_gdf):
-        merged_df = study_area_gdf[['SA1_CODE21', 'SA2_CODE21']].merge(sa2_gdf, on='SA2_CODE21', how='left')
-        merged_gdf = gpd.GeoDataFrame(merged_df, geometry=study_area_gdf.geometry)
+    def convert_sa2_gdf_to_sa1(sa2_gdf: gpd.GeoDataFrame,
+                               study_area_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        merged_df: pd.DataFrame = \
+            study_area_gdf[['SA1_CODE21', 'SA2_CODE21']].merge(sa2_gdf, on='SA2_CODE21', how='left')
+        merged_gdf: gpd.GeoDataFrame = gpd.GeoDataFrame(merged_df, geometry=study_area_gdf.geometry)
         merged_gdf.crs = 'EPSG:4283'
         return merged_gdf
 
-    def divide_field_values(self, gdf, exclude_division_field_list, geolevel, division_method):
-        new_gdf = gdf.copy()
+    def divide_field_values(self,
+                            gdf: gpd.GeoDataFrame,
+                            exclude_division_field_list: List[str],
+                            geolevel: str,
+                            division_method: str) -> gpd.GeoDataFrame:
+        new_gdf: gpd.GeoDataFrame = gdf.copy()
         for idx, row in new_gdf.iterrows():
-            sa1_code = row['SA1_CODE21']
-            sa2_code = row['SA2_CODE21']
+            sa1_code: str = row['SA1_CODE21']
+            sa2_code: str = row['SA2_CODE21']
 
             if geolevel == "SA2":
                 if division_method == "equal":
-                    divisor = 1 / len(self.sa2_2_sa1_dict[sa2_code])
+                    divisor: float = 1 / len(self.sa2_2_sa1_dict[sa2_code])
                 elif division_method == "population":
-                    divisor = self.sa2_2_sa1_dict[sa2_code][sa1_code]
+                    divisor: float = self.sa2_2_sa1_dict[sa2_code][sa1_code]
                 else:
                     raise ValueError('Division_method must be either "equal" or "population"')
 
             elif geolevel == "PHA":
-                pha_code = row['pha_code']
+                pha_code: str = row['pha_code']
                 if division_method == "equal":
-                    divisor = 1 / len(self.pha_2_sa2_dict[pha_code]) * 1 / len(self.sa2_2_sa1_dict[sa2_code])
+                    divisor: float = \
+                        (1 / (len(self.pha_2_sa2_dict[pha_code])) * (1 / len(self.sa2_2_sa1_dict[sa2_code])))
                 elif division_method == "population":
-                    divisor = self.pha_2_sa2_dict[pha_code][sa2_code] * self.sa2_2_sa1_dict[sa2_code][sa1_code]
+                    divisor: float = \
+                        self.pha_2_sa2_dict[pha_code][sa2_code] * self.sa2_2_sa1_dict[sa2_code][sa1_code]
                 else:
                     raise ValueError('Division_method must be either "equal" or "population"')
 

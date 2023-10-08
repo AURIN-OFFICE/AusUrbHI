@@ -22,13 +22,12 @@ for filename in tqdm(os.listdir(folder_path),
             gdf = mapper.convert_sa2_gdf_to_sa1(gdf, study_area_gdf)
 
             # second, for each division method, divide and save shapefile
-            exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16',
-                                           'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
-                                           'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
-                                           'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry',
-                                           'index', 'STATE_CODE', 'STATE_NAME', 'GCCSA_CODE',
-                                           'GCCSA_NAME', 'SA4_CODE_2', 'SA4_NAME_2', 'SA3_CODE_2',
-                                           'SA3_NAME_2', 'SA2_CODE_2', 'SA2_NAME_2', 'label', 'year',
+            exclude_division_field_list = ['SA1_CODE21', 'SA2_CODE21', 'Shape', 'id', 'sa2_name_2', 'yr',
+                                           'SA2_MAIN16', 'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
+                                           'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16', 'sa3_code16',
+                                           'sa3_name16', 'sa2_name16', 'geometry', 'index', 'STATE_CODE',
+                                           'STATE_NAME', 'GCCSA_CODE', 'GCCSA_NAME', 'SA4_CODE_2', 'SA4_NAME_2',
+                                           'SA3_CODE_2', 'SA3_NAME_2', 'SA2_CODE_2', 'SA2_NAME_2', 'label', 'year',
                                            'INDIV_QLTY', 'OVR_QLTY', 'RATIO']
             equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "SA2", "equal")
             population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "SA2", "population")
