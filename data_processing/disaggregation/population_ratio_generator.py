@@ -65,7 +65,7 @@ class PopulationMapper:
             if sa2_code_21 not in sa1_in_sa2_dict:
                 sa1_in_sa2_dict[sa2_code_21] = []
             sa1_in_sa2_dict[sa2_code_21].append(sa1_code_21)
-        return {str(k): set(v) for k, v in sa1_in_sa2_dict.items()}
+        return {k: set(v) for k, v in sa1_in_sa2_dict.items()}
 
     def create_sa2_in_pha_dict(self):
         sa2_in_pha_dict = {}
@@ -79,7 +79,7 @@ class PopulationMapper:
             sa2_code_2021_list = self.sa2_2016_to_sa2_2021_data[self.sa2_2016_to_sa2_2021_data['SA2_MAINCODE_2016']
                                                                 == sa2_code_2016]['SA2_CODE_2021'].tolist()
             sa2_in_pha_dict[pha_code].extend(sa2_code_2021_list)
-        return {str(k): set(v) for k, v in sa2_in_pha_dict.items()}
+        return {k: {x for x in v if str(x) != 'nan'} for k, v in sa2_in_pha_dict.items()}
 
     def create_sa1_population_ratio_in_sa2_dict(self):
         sa1_population_ratio_in_sa2_dict = {}
