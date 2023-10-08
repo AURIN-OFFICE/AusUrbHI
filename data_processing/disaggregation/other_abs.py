@@ -1,20 +1,16 @@
 import os
-import json
 import geopandas as gpd
+from tqdm import tqdm
 from disaggregation_mapper import DisaggregationMapper
 
-folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
-study_area_gdf = gpd.read_file("../_data/study area/ausurbhi_study_area_2021.shp")
-output_folder_path = "../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 and sa1 concordance"
+folder_path = "../../_data/AusUrbHI HVI data processed/other ABS datasets by 2021 concordance"
+study_area_gdf = gpd.read_file("../../_data/study area/ausurbhi_study_area_2021.shp")
+output_folder_path = "../../_data/AusUrbHI HVI data processed"
 
-with open('population_dicts.json', 'r') as f:
-    sa1_population_ratio_in_sa2_dict, sa2_population_ratio_in_pha_dict = json.load(f)
 mapper = DisaggregationMapper()
 
-# create a dictionary of sa2 codes and number of SA1s in each sa2
-sa2_has_number_of_sa1_dict = mapper.create_sa2_has_number_of_sa1_dict()
-
-for filename in os.listdir(folder_path):
+for filename in tqdm(os.listdir(folder_path),
+                     total=len(os.listdir(folder_path)), desc="Disaggregating other ABS datasets"):
     mapper.filename = filename
 
     if filename.endswith(".shp"):
@@ -22,23 +18,34 @@ for filename in os.listdir(folder_path):
         gdf = gpd.read_file(file_path)
 
         if "sa2" in filename:
+            # first, convert shapefile to SA1 level
+            gdf = mapper.convert_sa2_gdf_to_sa1(gdf, study_area_gdf)
+
+            # second, for each division method, divide and save shapefile
             exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16',
                                            'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
                                            'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
                                            'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry',
                                            'index', 'STATE_CODE', 'STATE_NAME', 'GCCSA_CODE',
                                            'GCCSA_NAME', 'SA4_CODE_2', 'SA4_NAME_2', 'SA3_CODE_2',
-                                           'SA3_NAME_2', 'SA2_CODE_2', 'SA2_NAME_2', 'label', 'year']
-
-            # convert SA2 shp to SA1 shp and divide SA2 data value by number of SA1s in SA2
-            result_gdf = mapper.convert_sa2_to_sa1_and_divide(gdf, study_area_gdf,
-                                                              exclude_division_field_list)
+                                           'SA3_NAME_2', 'SA2_CODE_2', 'SA2_NAME_2', 'label', 'year',
+                                           'INDIV_QLTY', 'OVR_QLTY', 'RATIO']
+            equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "SA2", "equal")
+            population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "SA2", "population")
 
         else:
-            result_gdf = gdf.copy()
+            equal_divided_gdf = gdf.copy()
+            population_divided_gdf = gdf.copy()
+        no_divided_gdf = gdf.copy()
 
         # save the file
-        result_gdf = mapper.cleanse_geometry(result_gdf, study_area_gdf)
-        output_filename = filename.replace('_2021_concordance.shp', '_2021_sa1_concordance.shp')
-        output_path = os.path.join(output_folder_path, output_filename)
-        result_gdf.to_file(output_path)
+        for string in ["equal_divide", "population_divide", "no_divide"]:
+            output_filename = f'other ABS datasets by 2021 and sa1 concordance {string.replace("_", " ")}/' + \
+                              filename.replace('_2021_concordance.shp', f'_2021_sa1_concordance_{string}.shp')
+            output_path = os.path.join(output_folder_path, output_filename)
+            if string == "equal_divide":
+                equal_divided_gdf.to_file(output_path)
+            elif string == "population_divide":
+                population_divided_gdf.to_file(output_path)
+            else:
+                no_divided_gdf.to_file(output_path)

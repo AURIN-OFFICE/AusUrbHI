@@ -1,52 +1,41 @@
 import os
 import geopandas as gpd
+from tqdm import tqdm
 from disaggregation_mapper import DisaggregationMapper
 
-folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 concordance"
-study_area_shp_path = "../_data/study area/ausurbhi_study_area_2021.shp"
-study_area_gdf = gpd.read_file(study_area_shp_path)
-output_folder_path = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 and sa1 concordance"
+folder_path = "../../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 concordance"
+study_area_gdf = gpd.read_file("../../_data/study area/ausurbhi_study_area_2021.shp")
+output_folder_path = "../../_data/AusUrbHI HVI data processed"
 
 mapper = DisaggregationMapper()
 
-# create a dictionary of pha codes and number of SA2s in each pha
-pha_has_number_of_sa2_dict = mapper.create_pha_has_number_of_sa2_dict()
-
-# create a dictionary of sa2 codes and number of SA1s in each sa2
-sa2_has_number_of_sa1_dict = mapper.create_sa2_has_number_of_sa1_dict()
-
-for filename in os.listdir(folder_path):
+for filename in tqdm(os.listdir(folder_path),
+                     total=len(os.listdir(folder_path)), desc="Disaggregating PHIDU and NATSEM datasets"):
     mapper.filename = filename
 
     if filename.endswith(".shp"):
         file_path = os.path.join(folder_path, filename)
         gdf = gpd.read_file(file_path)
 
-        if "phidu" in filename:
-            exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA2_CODE21', 'geometry']
+        # first, convert shapefile to SA1 level
+        gdf = mapper.convert_sa2_gdf_to_sa1(gdf, study_area_gdf)
 
-            # divide PHIDU data value by number of SA2s in PHA
-            pha_2_sa2_gdf = mapper.divide_pha_data_by_number_of_sa2(gdf, exclude_division_field_list)
+        # second, for each division method, divide and save shapefile
+        exclude_division_field_list = ['Shape', 'id', 'fid', 'pha_code', 'pha_name', 'SA2_CODE21',
+                                       'sa2_name16', 'geometry', 'INDIV_QLTY', 'OVR_QLTY', 'RATIO']
 
-            # save the temporary file for reference purpose
-            temp_output_filename = filename.replace('_2021_concordance.shp', '_2021_pha_concordance.shp')
-            temp_folder = "../_data/AusUrbHI HVI data processed/PHIDU and NATSEM datasets by 2021 and pha concordance"
-            temp_output_path = os.path.join(temp_folder, temp_output_filename)
-            pha_2_sa2_gdf.to_file(temp_output_path)
-
-            # convert SA2 shp to SA1 shp and divide SA2 data value by number of SA1s in SA2
-            result_gdf = mapper.convert_sa2_to_sa1_and_divide(pha_2_sa2_gdf, study_area_gdf,
-                                                              exclude_division_field_list)
-
-        else:
-            exclude_division_field_list = ['Shape', 'id', 'SA2_CODE21', 'sa2_name16', 'geometry']
-
-            # convert sa2 shp to sa1 shp and divide sa2 data value by number of sa1s in sa2
-            result_gdf = mapper.convert_sa2_to_sa1_and_divide(gdf, study_area_gdf,
-                                                              exclude_division_field_list)
+        equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "PHA", "equal")
+        population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, "PHA", "population")
+        no_divided_gdf = gdf.copy()
 
         # save the file
-        result_gdf = mapper.cleanse_geometry(result_gdf, study_area_gdf)
-        output_filename = filename.replace('_2021_concordance.shp', '_2021_sa1_concordance.shp')
-        output_path = os.path.join(output_folder_path, output_filename)
-        result_gdf.to_file(output_path)
+        for string in ["equal_divide", "population_divide", "no_divide"]:
+            output_filename = f'PHIDU and NATSEM datasets by 2021 and sa1 concordance {string.replace("_", " ")}/' + \
+                              filename.replace('_2021_concordance.shp', f'_2021_sa1_concordance_{string}.shp')
+            output_path = os.path.join(output_folder_path, output_filename)
+            if string == "equal_divide":
+                equal_divided_gdf.to_file(output_path)
+            elif string == "population_divide":
+                population_divided_gdf.to_file(output_path)
+            else:
+                no_divided_gdf.to_file(output_path)
