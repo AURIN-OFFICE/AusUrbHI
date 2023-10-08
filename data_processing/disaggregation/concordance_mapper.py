@@ -1,53 +1,13 @@
 import pandas as pd
 import geopandas as gpd
-from geopandas import GeoDataFrame
 from tqdm import tqdm
 
 
 class ConcordanceMapper:
-    def __init__(self, filename=None):
-        self.pha_2_sa2_dict = None
-        self.sa2_2_sa1_dict = None
-        self.filename = filename
-
-    def create_pha_has_number_of_sa2_dict(self):
-        csv_path = "../_data/study area/PHIDU_2016_SA2_PHA.csv"
-        csv_data = pd.read_csv(csv_path)
-
-        # Initialize an empty dictionary
-        pha_2_sa2_dict = {}
-
-        # Loop through each row in the DataFrame
-        for index, row in csv_data.iterrows():
-            pha_code = row['PHA code']
-
-            # If PHA code is not already in dictionary, initialize with 0
-            if pha_code not in pha_2_sa2_dict:
-                pha_2_sa2_dict[pha_code] = 0
-
-            # Increment count for this PHA code by 1 (corresponding to one SA2 code)
-            pha_2_sa2_dict[pha_code] += 1
-
+    def __init__(self, sa2_2_sa1_dict, pha_2_sa2_dict, filename=None):
+        self.sa2_2_sa1_dict = sa2_2_sa1_dict
         self.pha_2_sa2_dict = pha_2_sa2_dict
-
-    def create_sa2_has_number_of_sa1_dict(self):
-        shp_path = "../_data/study area/ausurbhi_study_area_2021.shp"
-        gdf = gpd.read_file(shp_path)
-
-        # Initialize an empty dictionary to store the counts
-        sa2_to_sa1_dict = {}
-
-        # Loop through each row in the GeoDataFrame
-        for index, row in gdf.iterrows():
-            sa2_code = row['SA2_CODE21']
-
-            # Update the dictionary count
-            if sa2_code in sa2_to_sa1_dict:
-                sa2_to_sa1_dict[sa2_code] += 1
-            else:
-                sa2_to_sa1_dict[sa2_code] = 1
-
-        self.sa2_2_sa1_dict = sa2_to_sa1_dict
+        self.filename = filename
 
     @staticmethod
     def divide_value(value, divisor, code, column):
