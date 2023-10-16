@@ -3,4 +3,4 @@ __pycache__
 _data/
 .ipynb_checkpoints/
 .venv/
-.venv bak/
+.venv python3.11 bak/
