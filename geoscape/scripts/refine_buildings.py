@@ -1,4 +1,5 @@
 import geopandas as gpd
+from shapely.geometry import Point
 
 # Load only necessary columns
 cols_meshblock = ['MB_CODE21', 'SA1_CODE21']
@@ -22,6 +23,10 @@ print("refined buildings data to study area.")
 meshblock_sa1_code_dict = meshblock_gdf.set_index('MB_CODE21')['SA1_CODE21'].to_dict()
 buildings_gdf['SA1_CODE21'] = buildings_gdf['MB_CODE'].map(meshblock_sa1_code_dict)
 print("added SA1 code to buildings data.")
+
+# Convert to GeoDataFrame with dummy geometry
+geometry = [Point(0, 0) for _ in range(len(buildings_gdf))]
+buildings_gdf = gpd.GeoDataFrame(buildings_gdf, geometry=geometry)
 
 # Save
 output_path = "../../_data/AusUrbHI HVI data processed/Geoscape/temporary/buildings_in_study_area.shp"
