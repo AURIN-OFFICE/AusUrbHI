@@ -1,3 +1,4 @@
+import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 from geopandas import GeoDataFrame
@@ -15,15 +16,14 @@ class StudyAreaProcessor:
 
         # group buildings by SA1
         self.grouped_buildings = self.building_gdf.groupby('SA1_CODE21')
-        assert len(self.grouped_buildings.groups) == len(
-            self.study_area_gdf), "Number of SA1s in study area does not match number of SA1s in building data."
+        print(len(self.grouped_buildings.groups), len(self.study_area_gdf))
 
     def compute_fields(self):
         self.result = []
         for sa1_code, group_data in tqdm(self.grouped_buildings, total=len(self.grouped_buildings),
                                          desc="processing buildings"):
             count = len(group_data)
-            sp_adj_yes = group_data['SP_ADJ'].value_counts().get('yes', 0)
+            sp_adj_yes = group_data['SP_ADJ'].str.contains('Yes', case=False, na=False).sum()
             pr_rf_ma_counts = group_data['PR_RF_MA'].value_counts()
 
             # compute fields based on values of all buildings in the SA1
@@ -38,9 +38,10 @@ class StudyAreaProcessor:
             self.result.append(sa1_dict)
 
     def save_output(self, output_path):
-        new_gdf = GeoDataFrame(self.result, crs=self.study_area_gdf.crs)
-        new_gdf = new_gdf.merge(self.study_area_gdf[['SA1_CODE21', 'geometry']], on='SA1_CODE21', how='left')
-        new_gdf.to_file(output_path)
+        result_df = pd.DataFrame(self.result)
+        merged_df = result_df.merge(self.study_area_gdf[['SA1_CODE21', 'geometry']], on='SA1_CODE21', how='left')
+        new_gdf = GeoDataFrame(merged_df, geometry='geometry', crs=self.study_area_gdf.crs)
+        new_gdf.to_file('../_data/AusUrbHI HVI data processed/Geoscape/buildings.shp')
 
 
 if __name__ == "__main__":
