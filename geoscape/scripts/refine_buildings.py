@@ -27,8 +27,9 @@ print("added SA1 code to buildings data.")
 # Convert to GeoDataFrame with dummy geometry
 geometry = [Point(0, 0) for _ in range(len(buildings_gdf))]
 buildings_gdf = gpd.GeoDataFrame(buildings_gdf, geometry=geometry)
+print("geometry added.")
 
 # Save
-output_path = "../../_data/AusUrbHI HVI data processed/Geoscape/buildings_in_study_area.shp"
+output_path = "../../_data/AusUrbHI HVI data unprocessed/Geoscape/temporary/buildings_in_study_area.shp"
 buildings_gdf.to_file(output_path)
 print("saved to", output_path)

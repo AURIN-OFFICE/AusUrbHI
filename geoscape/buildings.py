@@ -44,7 +44,7 @@ class StudyAreaProcessor:
 
 
 if __name__ == "__main__":
-    building_gdf = gpd.read_file("../_data/AusUrbHI HVI data processed/Geoscape/temporary/buildings_in_study_area.shp")
+    building_gdf = gpd.read_file("../_data/AusUrbHI HVI data unprocessed/Geoscape/temporary/buildings_in_study_area.shp")
     meshblock_gdf = gpd.read_file("../_data/study area/meshblock_study_area_2021.shp")
     study_area_gdf = gpd.read_file("../_data/study area/ausurbhi_study_area_2021.shp")
     print("data loaded.")
