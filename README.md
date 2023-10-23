@@ -37,6 +37,26 @@ Scripts for obtaining and derive the study area data for HVI and urban liveabili
 3. convert to 2021 ASGS standard using scripts under /2016_to_2021_concordance with concordance files.
 4. perform disaggregation to ensure all data is at SA1 level using scripts under /disaggregation. Three disaggregation algorithms are used: divided by number of subdivision regions, by population, and no division.
 
+## Surface Raster Processing
+raster input: 
+	2m surface rasters in NSW
+	two 30m surface rasters ACTNSW_SURFACECOVER_30M_Z55.tif and Z56.tif (others are not interesting with the study area)
+
+preprocess 30m raster
+- [x] clip the two 30m rasters with study area
+- [x] resample the rasters to 2m
+
+mosaic dataset creation
+- [x] create a mosaic dataset in GDA94
+- [x] add all rasters (original 30m and 2m) to it
+- [x] avoid duplicated count from overlapping regions by setting Mosaic rule (By Attribute)
+
+derive landuse shapefile
+- [x] reclassify symbology to value with 0-12 from 256 (stretch -> discrete)
+- [x] zonal histogram analysis
+- [x] convert to shapefile
+- [x] manual validation and change field name
+
 ## Building Point Cloud Processing
 The building footprint processing methodology consists of three steps. 
 1.	Hole Removal: A BuildingHoleRemover class is initialized with an input shapefile of building polygons. It reads the shapefile, removes small holes from the building polygons based on a minimum area, and saves the processed polygons to a new shapefile.

@@ -43,18 +43,19 @@ class StudyAreaProcessor:
         self.results = [
             {
                 'SA1_CODE21': sa1_code,
-                'SP_ADJ': group_data['SP_ADJ'].str.contains('Yes', case=False, na=False).sum() / len(group_data),
-                'ROOF_HGT': group_data['ROOF_HGT'].mean(),
-                'MAT_Tile': group_data['PR_RF_MAT'].value_counts().get('Tile', 0) / len(group_data),
-                'MAT_Metal': group_data['PR_RF_MAT'].value_counts().get('Metal', 0) / len(group_data),
-                'MAT_Concre': group_data['PR_RF_MAT'].value_counts().get('Flat Concrete', 0) / len(group_data),
-                'ROOF_CLR': group_data['ROOF_CLR'].apply(self.compute_luminance).mean(),
-                'AREA': group_data['AREA'].sum() / (self.sa1_area_dict[sa1_code] * 1e6),
-                'EST_LEV': group_data['EST_LEV'].mean()
+                'SP_ADJ': round(group_data['SP_ADJ'].str.contains('Yes', case=False, na=False).sum() / len(group_data), 2),
+                'ROOF_HGT': round(group_data['ROOF_HGT'].mean(), 2),
+                'MAT_Tile': round(group_data['PR_RF_MAT'].value_counts().get('Tile', 0) / len(group_data), 2),
+                'MAT_Metal': round(group_data['PR_RF_MAT'].value_counts().get('Metal', 0) / len(group_data), 2),
+                'MAT_Concre': round(group_data['PR_RF_MAT'].value_counts().get('Flat Concrete', 0) / len(group_data), 2),
+                'ROOF_CLR': round(group_data['ROOF_CLR'].dropna().apply(self.compute_luminance).mean(), 2),
+                'AREA': round(group_data['AREA'].sum() / (self.sa1_area_dict[sa1_code] * 1e6), 2),
+                'EST_LEV': round(group_data['EST_LEV'].mean(), 2)
             }
             for sa1_code, group_data in 
             tqdm(self.grouped_buildings, total=len(self.grouped_buildings), desc="processing buildings")
         ]
+
 
     def save_output(self, output_path):
         """
