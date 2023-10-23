@@ -54,7 +54,7 @@ mosaic dataset creation
 derive landuse shapefile
 - [x] reclassify symbology to value with 0-12 from 256 (stretch -> discrete)
 - [x] zonal histogram analysis
-- [x] convert to shapefile
+- [x] convert to shapefile (table to excel, and postprocessing)
 - [x] manual validation and change field name
 
 ## Building Point Cloud Processing

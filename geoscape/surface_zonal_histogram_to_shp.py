@@ -3,7 +3,8 @@ import geopandas as gpd
 import os
 
 # Step 1: Read the Excel file and drop the first column
-df = pd.read_excel("../_data/AusUrbHI HVI data unprocessed/Geoscape/temporary/surface/surface_histogram/surface_histogram.xlsx")
+df = pd.read_excel("../_data/AusUrbHI HVI data unprocessed/Geoscape/temporary/surface/surface_histogram_v4/"
+                   "surface_histogram.xlsx")
 df.drop(columns=['Rowid'], inplace=True)
 
 # Step 2: Modify the LABEL column values
@@ -22,17 +23,33 @@ merged_gdf.drop(columns=cols_to_drop, inplace=True)
 merged_gdf.crs = gdf_study_area.crs
 
 # Step 5: Calculate the sum for each row (excluding the geometry and SA1_CODE21 columns)
-merged_gdf['total_landuse_cells'] = merged_gdf.drop(columns=['geometry', 'SA1_CODE21']).sum(axis=1)
+merged_gdf['total_cell'] = merged_gdf.drop(columns=['geometry', 'SA1_CODE21']).sum(axis=1)
 
 # Step 6: Calculate the proportion for each land use type column and round to two decimal places
-landuse_columns = merged_gdf.columns.difference(['geometry', 'SA1_CODE21', 'total_landuse_cells'])
+landuse_columns = merged_gdf.columns.difference(['geometry', 'SA1_CODE21', 'total_cell'])
 
 for column in landuse_columns:
-    merged_gdf[column] = (merged_gdf[column] / merged_gdf['total_landuse_cells']).round(2)
+    merged_gdf[column] = (merged_gdf[column] / merged_gdf['total_cell']).round(2)
 
-# Step 7: Ensure directory exists before saving
+# Steo 7: Rename the columns
+rename_dict = {
+    "CLASS_43": "BareErth",
+    "CLASS_64": "RdNPath",
+    "CLASS_86": "Grass",
+    "CLASS_107": "Trees",
+    "CLASS_128": "UnspVeg",
+    "CLASS_150": "BuiltUp",
+    "CLASS_171": "Water",
+    "CLASS_192": "Building",
+    "CLASS_214": "Cloud",
+    "CLASS_235": "Shadow",
+    "CLASS_256": "Pool",
+}
+merged_gdf = merged_gdf.rename(columns=rename_dict)
+
+# Step 8: Ensure directory exists before saving
 output_dir = "../_data/AusUrbHI HVI data processed/Geoscape"
-output_path = os.path.join(output_dir, "surface.shp")
+output_path = os.path.join(output_dir, "surface_cover.shp")
 merged_gdf.to_file(output_path)
 
 print("Shapefile saved successfully!")
