@@ -39,7 +39,7 @@ def year_to_indices(year):
 
 def main():
     nc_file_path = "..\\_data\\AusUrbHI HVI data unprocessed\\Longpaddock SILO LST\\merged_heatwaves.nc"
-    shapefile = gpd.read_file('..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp')
+    shapefile = gpd.read_file('../../_data/study area/ausurbhi_study_area_2016_with_pha.shp')
     output_shapefile = shapefile[['SA1_MAIN16', 'geometry']].copy()
 
     with ProcessPoolExecutor() as executor:

@@ -18,7 +18,7 @@ nc_file = xr.open_dataset("..\\_data\\AusUrbHI HVI data unprocessed\\Longpaddock
 nc_file = nc_file.rio.write_crs("EPSG:7844", inplace=True)
 
 # Open the shapefile
-shapefile = gpd.read_file('..\\_data\\study area\\ausurbhi_study_area_2016_with_pha.shp')
+shapefile = gpd.read_file('../../_data/study area/ausurbhi_study_area_2016_with_pha.shp')
 
 # Create a copy of the shapefile to modify
 output_shapefile = shapefile[['SA1_MAIN16', 'geometry']].copy()

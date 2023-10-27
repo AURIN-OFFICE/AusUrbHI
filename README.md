@@ -114,6 +114,17 @@ Here is the list of datasets we are planning to use and compare the results.
 
 **BOM** The heatwave data (EHF) is available from late 2018 on wards only.
 
+**Longpaddock SILO** Processed weather station data
+
+We choose to use the SILO dataset with the following process steps.
+- [x] download max/min daily temperature netcdf files from 2010 to 2022
+- [x] merge nc to 2010_2022_max_temp.nc and 2011_2022_min_temp.nc
+- [x] refine to study area and buff by 0.5
+- [x] fill nan value
+- [x] derive EHF, tx90, and tn90
+- [x] merge result to one nc file
+- [x] perform SA1 level analysis and derive shapefile
+
 ## SNOMED-CT-AU to ICD-10 Mapping
 The package performs code mapping between SNOMED-CT-AU and ICD-10. The methodology involved mapping SNOMED CT codes to ICD codes using a mock-up dataset with 4,000+ entries. Four steps were taken: 1) using Snapper to resolve synonyms and unofficial names, 2) using SnoMap, 3) using the IHTSDO international SNOMED mapping tool for cross-validation, and 4) using the I-MAGIC mapper, which resolved some unmatched entries. The final result was 99.68% recall, with 13 unmatched codes.
 However, there are risks associated with the process: 1) the actual dataset might not be as clean as the mock-up, 2) the size of the real dataset is unknown and may affect tool usability, 3) precision has not been checked, making validation difficult, 4) a coder with professional knowledge may be required to resolve unmatched entries and disambiguate multi-match cases, and 5) differences between the Australian and international versions of the codes may impact the reliability of the results from international tools. In conclusion, the methodology achieved a high recall rate, but further validation and professional expertise may be needed to ensure accurate results.
