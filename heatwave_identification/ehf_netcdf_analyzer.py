@@ -2,24 +2,8 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 import xarray as xr
-import warnings
 from tqdm import tqdm
-from contextlib import contextmanager
 from collections import defaultdict
-
-
-@contextmanager
-def ignore_specific_warning(message_contains):
-    with warnings.catch_warnings(record=True) as w:
-        # Trigger a warning.
-        warnings.simplefilter("always")
-        yield
-        for warning in w:
-            if message_contains in str(warning.message):
-                continue
-            warnings.showwarning(
-                warning.message, warning.category,
-                warning.filename, warning.lineno)
 
 
 class EHFAnalyzer:
@@ -42,7 +26,7 @@ class EHFAnalyzer:
             sa1_centroid_dict[row['SA1_CODE21']] = row['geometry'].centroid
         return sa1_centroid_dict
 
-    def ehf_statistics_analysis(self, start_year: int = 11, end_year: int = 21) -> None:
+    def ehf_statistics_analysis(self, start_year: int = 11, end_year: int = 22) -> None:
         """Compute for each year and SA1:
         1. the average and maximum EHF
         2. the average heatwave duration, number of heatwave days, and
@@ -65,7 +49,7 @@ class EHFAnalyzer:
             year_data = {}
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
-                                      desc=f'Computing heatwave statistics for {year}',
+                                      desc=f'Computing heatwave statistics for year 20{year}',
                                       colour="green"):
                 x, y = centroid.x, centroid.y
                 while True:
@@ -96,7 +80,7 @@ class EHFAnalyzer:
                           number_heatwave_days_field, number_extreme_heatwave_days_field]:
                     self.output_gdf.loc[self.output_gdf['SA1_CODE21'] == sa1_code, i] = values[i]
 
-    def get_all_heatwave_days(self, start_year: int = 11, end_year: int = 21) -> None:
+    def get_all_heatwave_days(self, start_year: int = 11, end_year: int = 22) -> None:
         """Compute for each year and SA1:
         1. the dates of heatwaves, and
         2. the dates of extreme heatwaves (EHF >=3)
@@ -112,7 +96,7 @@ class EHFAnalyzer:
 
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
-                                      desc=f'Collecting heatwave days for {year}',
+                                      desc=f'Collecting heatwave days for year 20{year}',
                                       colour='green'):
                 x, y = centroid.x, centroid.y
                 while True:
@@ -144,15 +128,14 @@ class EHFAnalyzer:
 
 
 if __name__ == '__main__':
-    with ignore_specific_warning("has multiple fill values {-888.88, -999.99}"):
-        analyzer = EHFAnalyzer()
+    analyzer = EHFAnalyzer()
 
-        analyzer.ehf_statistics_analysis()
-        analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                    'heatwave_analysis.shp')
+    analyzer.ehf_statistics_analysis()
+    analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+                                'heatwave_analysis.shp')
 
-        analyzer.get_all_heatwave_days()
-        analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                      'heatwave_days.csv')
-        analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                              'extreme_heatwave_days.csv')
+    analyzer.get_all_heatwave_days()
+    analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+                                  'heatwave_days.csv')
+    analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+                                          'extreme_heatwave_days.csv')
