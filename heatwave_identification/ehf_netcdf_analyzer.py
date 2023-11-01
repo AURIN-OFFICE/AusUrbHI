@@ -60,9 +60,8 @@ class EHFAnalyzer:
         """Compute for each year and SA1:
         1. the average and maximum EHF,
         2. the average heatwave duration, number of heatwave days,
-        3. average excess heat duration and number of excess heat days (EHF > 0),
-        4. number of extreme heatwave days, and
-        5. average and maximum summer percentile deviation
+        3. average excess heat duration and number of excess heat days (EHF > 0), and
+        4. number of extreme heatwave days
         for each SA1 centroid location during summer months (Dec, Jan, Feb) in each year.
         """
         for year in years:
@@ -78,7 +77,7 @@ class EHFAnalyzer:
             average_excess_heat_duration = f'eh_len_{year}'
             number_of_excess_heat_days = f'eh_days_{year}'
 
-            number_of_extreme_heatwave_days = f'ex_len_{year}'
+            number_of_extreme_heatwave_days = f'ex_days_{year}'
 
             # get relevant data for each SA1 centroid location during the period
             year_data = {}
