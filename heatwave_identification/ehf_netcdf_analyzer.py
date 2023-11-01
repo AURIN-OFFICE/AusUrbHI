@@ -12,7 +12,6 @@ class EHFAnalyzer:
         self.sa1_centroid_dict = self._creat_sa1_centroid_dict()
         self.ehf_xarray = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
                                           'EHF_heatwaves____daily.nc')
-        self.lst_xarray = None
         self.output_gdf = gpd.read_file('../_data/study area/ausurbhi_study_area_2021.shp')[['SA1_CODE21', 'geometry']]
 
     @staticmethod
@@ -81,9 +80,6 @@ class EHFAnalyzer:
 
             number_of_extreme_heatwave_days = f'ex_len_{year}'
 
-            average_summer_percentile_deviation = None
-            maximum_summer_percentile_deviation = None
-
             # get relevant data for each SA1 centroid location during the period
             year_data = {}
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
@@ -123,18 +119,12 @@ class EHFAnalyzer:
 
                     number_of_extreme_heatwave_days: round(
                         ((point_data['event'] == 1) & (point_data['EHF'] >= 3)).sum().item(), 2)
-
-                    average_summer_percentile_deviation: None,
-                    maximum_summer_percentile_deviation: None
                 }
 
             # add the data to the output shapefile in the new added fields
             for sa1_code, values in year_data.items():
-                for i in [average_EHF_value, max_EHF_value,
-                          average_excess_heat_duration, number_of_excess_heat_days,
-                          average_heatwave_duration, number_of_heatwave_days,
-                          number_of_extreme_heatwave_days,
-                          average_summer_percentile_deviation, maximum_summer_percentile_deviation]:
+                for i in [average_EHF_value, max_EHF_value, average_excess_heat_duration, number_of_excess_heat_days,
+                          average_heatwave_duration, number_of_heatwave_days, number_of_extreme_heatwave_days]:
                     self.output_gdf.loc[self.output_gdf['SA1_CODE21'] == sa1_code, i] = values[i]
 
     def get_all_heatwave_days(self, start_year: int = 11, end_year: int = 22) -> None:
