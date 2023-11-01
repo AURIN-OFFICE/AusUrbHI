@@ -26,23 +26,61 @@ class EHFAnalyzer:
             sa1_centroid_dict[row['SA1_CODE21']] = row['geometry'].centroid
         return sa1_centroid_dict
 
+    @staticmethod
+    def _compute_average_heatwave_duration(point_data_ends: xr.DataArray) -> int:
+        """The input is a heatwave length xarray data like [0, 3, 0, 0, 0, 2, 0, 0]. The function finds the average
+        non-zero values in the list. In this case 2.5. The hard part is dealing with timedelta and nan values.
+        """
+        heatwave_array_in_days = (point_data_ends[point_data_ends != np.timedelta64(0)]
+                                  / np.timedelta64(1, 'D'))
+        average_duration = heatwave_array_in_days.mean().item()
+        return average_duration if not np.isnan(average_duration) else 0
+
+    @staticmethod
+    def _compute_average_excess_heat_duration(point_data_ehf: xr.DataArray) -> float:
+        """The input is a EHF value xarray data like [0, 1, 3, 2, 0, 0, 1, 1]. The function finds the average length
+        of consecutive non-zero values in the list. For example 1, 3, 2, and 1, 1. So the result will be 2.5.
+        """
+        segment_lengths = []
+        current_length = 0
+
+        for value in point_data_ehf:
+            if value != 0:
+                current_length += 1
+            elif current_length != 0:
+                # If we hit a zero after a non-zero segment, save the segment length and reset
+                segment_lengths.append(current_length)
+                current_length = 0
+
+        # Check if the last segment is a non-zero segment and wasn't added
+        if current_length != 0:
+            segment_lengths.append(current_length)
+
+        return sum(segment_lengths) / len(segment_lengths) if segment_lengths else 0
+
     def ehf_statistics_analysis(self, start_year: int = 11, end_year: int = 22) -> None:
         """Compute for each year and SA1:
-        1. the average and maximum EHF
-        2. the average heatwave duration, number of heatwave days, and
-        3. number of extreme heatwave days
+        1. the average and maximum EHF,
+        2. average excess heat duration and number of excess heat days (EHF > 0),
+        3. the average heatwave duration, number of heatwave days, and
+        4. number of extreme heatwave days
         for each SA1 centroid location during summer months (Dec, Jan, Feb) in each year.
         """
         for year in range(start_year, end_year + 1):
             ds_summer = self.ds.sel(time=slice(f'20{year-1}-12-01', f'20{year}-02-28'))
 
-            # initiate new fields
-            avg_ehf_field = f'avg_ehf_{year}'
-            max_ehf_field = f'max_ehf_{year}'
-            avg_heatwave_duration_field = f'hw_len_{year}'
-            number_heatwave_days_field = f'hw_days_{year}'
-            number_extreme_heatwave_days_field = f'ex_hw_{year}'
-            for i in [avg_ehf_field, max_ehf_field, avg_heatwave_duration_field, number_heatwave_days_field]:
+            # initiate new fields; explains will be given below
+            average_EHF_value = f'avg_ehf_{year}'
+            max_EHF_value = f'max_ehf_{year}'
+
+            average_heatwave_duration = f'hw_len_{year}'
+            number_of_heatwave_days = f'hw_days_{year}'
+
+            average_excess_heat_duration = f'eh_len_{year}'
+            number_of_excess_heat_days = f'eh_days_{year}'
+
+            number_of_extreme_heatwave_days = f'ex_len_{year}'
+            for i in [average_EHF_value, max_EHF_value, average_heatwave_duration, number_of_heatwave_days]:
                 self.output_gdf[i] = pd.NA
 
             # get relevant data for each SA1 centroid location during the period
@@ -59,25 +97,34 @@ class EHFAnalyzer:
                     else:
                         break
 
-                # prepare data
-                heatwave_array_in_days = (point_data['ends'][point_data['ends'] != np.timedelta64(0)]
-                                          / np.timedelta64(1, 'D'))
-                number_heatwave_days = round(heatwave_array_in_days.mean().item(), 2)
-                extreme_heatwave_condition = (point_data['event'] == 1) & (point_data['EHF'] >= 3)
+                # == populate field value dict ==
+                # average_EHF_value: average EHF values
+                # max_EHF_value: max EHF value
+                # average_heatwave_duration: average of non-zero values in point_data['ends']
+                # number_of_heatwave_days: number of non-zero values in point_data['event']
+                # average_excess_heat_duration: average lengths of non-zero consecutive values in point_data['EHF']
+                # number_of_excess_heat_days: number of non-zero EHF values
+                # number_of_extreme_heatwave_days: number of non-zero event value while also EHF >= 3
 
-                # populate field value dict
                 year_data[sa1] = {
-                    avg_ehf_field: round(point_data['EHF'].mean().item(), 2),
-                    max_ehf_field: round(point_data['EHF'].max().item(), 2),
-                    avg_heatwave_duration_field: number_heatwave_days if not np.isnan(number_heatwave_days) else 0,
-                    number_heatwave_days_field: round(point_data['event'].sum().item(), 2),
-                    number_extreme_heatwave_days_field: round(extreme_heatwave_condition.sum().item(), 2)
+                    average_EHF_value: round(point_data['EHF'].mean().item(), 2),
+                    max_EHF_value: round(point_data['EHF'].max().item(), 2),
+
+                    average_heatwave_duration: round(self._compute_average_heatwave_duration(point_data['ends']), 2),
+                    number_of_heatwave_days: round(point_data['event'].sum().item(), 2),
+
+                    average_excess_heat_duration: round(
+                        self._compute_average_excess_heat_duration(point_data['EHF']), 2),
+                    number_of_excess_heat_days: round((point_data['EHF'] != 0).sum().item(), 2),
+
+                    number_of_extreme_heatwave_days: round(
+                        ((point_data['event'] == 1) & (point_data['EHF'] >= 3)).sum().item(), 2)
                 }
 
             # add the data to the output shapefile in the new added fields
             for sa1_code, values in year_data.items():
-                for i in [avg_ehf_field, max_ehf_field, avg_heatwave_duration_field,
-                          number_heatwave_days_field, number_extreme_heatwave_days_field]:
+                for i in [average_EHF_value, max_EHF_value, average_excess_heat_duration, number_of_excess_heat_days,
+                          average_heatwave_duration, number_of_heatwave_days, number_of_extreme_heatwave_days]:
                     self.output_gdf.loc[self.output_gdf['SA1_CODE21'] == sa1_code, i] = values[i]
 
     def get_all_heatwave_days(self, start_year: int = 11, end_year: int = 22) -> None:
@@ -134,8 +181,8 @@ if __name__ == '__main__':
     analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
                                 'heatwave_analysis.shp')
 
-    analyzer.get_all_heatwave_days()
-    analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                  'heatwave_days.csv')
-    analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                          'extreme_heatwave_days.csv')
+    # analyzer.get_all_heatwave_days()
+    # analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+    #                               'heatwave_days.csv')
+    # analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+    #                                       'extreme_heatwave_days.csv')
