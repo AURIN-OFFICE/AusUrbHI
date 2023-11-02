@@ -246,7 +246,7 @@ if __name__ == '__main__':
     analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
                                 'heatwave_analysis.shp')
 
-    # analyzer.get_all_heatwave_days()
+    # analyzer.get_all_heatwave_days()s
     # analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
     #                               'heatwave_days.csv')
     # analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
