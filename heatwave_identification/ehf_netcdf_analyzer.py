@@ -238,10 +238,9 @@ if __name__ == '__main__':
     analyzer.ehf_statistics_analysis()
     analyzer.percentile_deviation_analysis()
     new_column_order = [
-        'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16',
-        'hw_len_16', 'hw_days_16', 'eh_len_16', 'eh_days_16', 'ex_days_16',
-        'avg_dev_21', 'max_dev_21', 'avg_ehf_21', 'max_ehf_21',
-        'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21'
+        'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16', 'hw_len_16', 'hw_days_16',
+        'eh_len_16', 'eh_days_16', 'ex_days_16', 'avg_dev_21', 'max_dev_21', 'avg_ehf_21',
+        'max_ehf_21', 'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21', 'geometry'
     ]
     analyzer.output_gdf = analyzer.output_gdf[new_column_order]
     analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
