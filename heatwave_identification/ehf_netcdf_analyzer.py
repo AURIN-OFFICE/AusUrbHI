@@ -4,6 +4,7 @@ import numpy as np
 import xarray as xr
 from tqdm import tqdm
 from collections import defaultdict
+from scipy.stats import rankdata
 
 
 class EHFAnalyzer:
@@ -12,6 +13,10 @@ class EHFAnalyzer:
         self.sa1_centroid_dict = self._creat_sa1_centroid_dict()
         self.ehf_xarray = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
                                           'EHF_heatwaves____daily.nc')
+        self.max_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
+                                      '2010_2022_max_temp_clipped.nc')
+        self.min_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
+                                      '2010_2022_min_temp_clipped.nc')
         self.output_gdf = gpd.read_file('../_data/study area/ausurbhi_study_area_2021.shp')[['SA1_CODE21', 'geometry']]
 
     @staticmethod
@@ -84,7 +89,7 @@ class EHFAnalyzer:
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
                                       desc=f'Computing heatwave statistics for year 20{year}',
-                                      colour="green"):
+                                      colour="cyan"):
                 x, y = centroid.x, centroid.y
                 while True:
                     point_data = ds_summer.sel(lon=x, lat=y, method='nearest')
@@ -126,6 +131,60 @@ class EHFAnalyzer:
                           average_heatwave_duration, number_of_heatwave_days, number_of_extreme_heatwave_days]:
                     self.output_gdf.loc[self.output_gdf['SA1_CODE21'] == sa1_code, i] = values[i]
 
+    def percentile_deviation_analysis(self,
+                                      ref_years: range = range(2010, 2016),
+                                      target_years: tuple = (2016, 2021)):
+        """
+        Objective by instruction:
+        1. Create raster of "average daily temperature" using maximum and minimum daily temperature rasters across the
+        study area during the summer period for the years 2010-2015, 2016, and 2021.
+        2. Create spatial "average daily temperature" data for each SA1 in the study area over the above years.
+        3. Create two separate data sets of daily temperature: 2010-2015+2016, and 2010-2015+2021
+        4. For each area (should be ~2555 rows, give or take for leap years), convert "average daily temperature" into
+        percentiles.
+        5. For 2016 and 2021 summer periods, produce both the average percentile and the maximum percentile per region.
+        """
+
+        # Compute the average temperature data
+        avg_xr = (self.max_xr['max_temp'] + self.min_xr['min_temp']) / 2
+
+        for target_year in target_years:
+
+            # Concatenate summer periods for all reference year + target year
+            years = [i for i in ref_years] + [target_year]
+            summer_datasets = [avg_xr.sel(time=slice(f'{year-1}-12-01', f'{year}-02-28')) for year in years]
+            all_summers_concatenated = xr.concat(summer_datasets, dim='time')
+
+            # Compute xarray of average temperatures for each SA1 on each day
+            for sa1_code, centroid in tqdm(self.sa1_centroid_dict.items(),
+                                           total=len(self.sa1_centroid_dict),
+                                           desc='Computing average and maximum percentile deviation for each SA1',
+                                           colour="cyan"):
+                x, y = centroid.x, centroid.y
+                while True:
+                    sa1_data = all_summers_concatenated.sel(lon=x, lat=y, method='nearest')
+                    if sa1_data.isnull().all():
+                        x -= 0.05
+                    else:
+                        break
+
+                # Convert to percentile
+                percentiles = rankdata(sa1_data, method='average') / len(sa1_data) * 100
+                sa1_percentiles = xr.DataArray(percentiles, dims=sa1_data.dims, coords=sa1_data.coords)
+
+                # Get average and maximum percentile for the target year
+                percentiles_target_year = sa1_percentiles.sel(
+                    time=slice(f'{target_year-1}-12-01', f'{target_year}-02-28'))
+                assert percentiles_target_year.size == 90, f"Data size does not match."
+                max_percentile = round(percentiles_target_year.max().item(), 2)
+                avg_percentile = round(percentiles_target_year.mean().item(), 2)
+
+                # Update shapefile
+                self.output_gdf.loc[self.output_gdf['SA1_CODE21'] ==
+                                    sa1_code, f"avg_dev_{target_year-2000}"] = avg_percentile
+                self.output_gdf.loc[self.output_gdf['SA1_CODE21'] ==
+                                    sa1_code, f"max_dev_{target_year-2000}"] = max_percentile
+
     def get_all_heatwave_days(self, start_year: int = 11, end_year: int = 22) -> None:
         """Compute for each year and SA1:
         1. the dates of heatwaves, and
@@ -143,7 +202,7 @@ class EHFAnalyzer:
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
                                       desc=f'Collecting heatwave days for year 20{year}',
-                                      colour='green'):
+                                      colour='cyan'):
                 x, y = centroid.x, centroid.y
                 while True:
                     point_data = ds_summer.sel(lon=x, lat=y, method='nearest')
@@ -177,6 +236,14 @@ if __name__ == '__main__':
     analyzer = EHFAnalyzer()
 
     analyzer.ehf_statistics_analysis()
+    analyzer.percentile_deviation_analysis()
+    new_column_order = [
+        'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16',
+        'hw_len_16', 'hw_days_16', 'eh_len_16', 'eh_days_16', 'ex_days_16',
+        'avg_dev_21', 'max_dev_21', 'avg_ehf_21', 'max_ehf_21',
+        'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21'
+    ]
+    analyzer.output_gdf = analyzer.output_gdf[new_column_order]
     analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
                                 'heatwave_analysis.shp')
 

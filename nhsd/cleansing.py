@@ -1,6 +1,7 @@
 import geopandas as gpd
 import pandas as pd
 
+
 def create_nhsd_shp():
     short_name_dict = {
         "confidential_address": "conf_addr",
@@ -48,4 +49,12 @@ def create_nhsd_shp():
     # convert names to short names
     gdf.rename(columns=short_name_dict, inplace=True)
 
-    gdf.to_file(f"{output_folder}/nhsd.shp")
+    # get service name statistics
+    name_counts = gdf['snomed_nm'].value_counts()
+    name_counts_json = name_counts.to_json()
+    with open(f'{temp_folder}/service_name_count.json', 'w') as file:
+        file.write(name_counts_json)
+
+    gdf.to_file(f"{temp_folder}/nhsd_all_2020_nov.shp")
+
+create_nhsd_shp()
