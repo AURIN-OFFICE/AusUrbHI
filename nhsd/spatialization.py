@@ -3,6 +3,8 @@ import pandas as pd
 
 
 def create_nhsd_shp():
+    """Converts the NHSD CSV file to a shapefile, and calculates the number of services for each service name.
+    """
     short_name_dict = {
         "confidential_address": "conf_addr",
         "parent_org_id_old": "porg_idold",
@@ -46,6 +48,9 @@ def create_nhsd_shp():
         data, geometry=gpd.points_from_xy(data[lon_column], data[lat_column])
     )
 
+    # Set the CRS for WGS84 using EPSG code 4326
+    gdf.set_crs(epsg=4326, inplace=True)
+
     # convert names to short names
     gdf.rename(columns=short_name_dict, inplace=True)
 
@@ -55,6 +60,6 @@ def create_nhsd_shp():
     with open(f'{temp_folder}/service_name_count.json', 'w') as file:
         file.write(name_counts_json)
 
-    gdf.to_file(f"{temp_folder}/nhsd_all_2020_nov.shp")
+    gdf.to_file(f"{temp_folder}/nhsd_nov2020_utf8.shp")
 
 create_nhsd_shp()

@@ -235,19 +235,19 @@ class EHFAnalyzer:
 if __name__ == '__main__':
     analyzer = EHFAnalyzer()
 
-    analyzer.ehf_statistics_analysis()
-    analyzer.percentile_deviation_analysis()
-    new_column_order = [
-        'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16', 'hw_len_16', 'hw_days_16',
-        'eh_len_16', 'eh_days_16', 'ex_days_16', 'avg_dev_21', 'max_dev_21', 'avg_ehf_21',
-        'max_ehf_21', 'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21', 'geometry'
-    ]
-    analyzer.output_gdf = analyzer.output_gdf[new_column_order]
-    analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                'heatwave_analysis.shp')
+    # analyzer.ehf_statistics_analysis()
+    # analyzer.percentile_deviation_analysis()
+    # new_column_order = [
+    #     'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16', 'hw_len_16', 'hw_days_16',
+    #     'eh_len_16', 'eh_days_16', 'ex_days_16', 'avg_dev_21', 'max_dev_21', 'avg_ehf_21',
+    #     'max_ehf_21', 'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21', 'geometry'
+    # ]
+    # analyzer.output_gdf = analyzer.output_gdf[new_column_order]
+    # analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+    #                             'heatwave_analysis.shp')
 
-    # analyzer.get_all_heatwave_days()s
-    # analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-    #                               'heatwave_days.csv')
-    # analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-    #                                       'extreme_heatwave_days.csv')
+    analyzer.get_all_heatwave_days(19, 19)
+    analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
+                                  'heatwave_days.csv')
+    analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
+                                          'extreme_heatwave_days.csv')
