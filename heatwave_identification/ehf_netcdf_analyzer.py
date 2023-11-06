@@ -264,7 +264,7 @@ class EHFAnalyzer:
                     else:
                         break
 
-                # insert the data into preallocated dataframe, and add sa1 code before the data
+                # insert the data into pre-allocated dataframe, and add sa1 code before the data
                 df_max_temps = pd.DataFrame(sa1_max_data['max_temp'].values, columns=[sa1]).T
                 df_min_temps = pd.DataFrame(sa1_min_data['min_temp'].values, columns=[sa1]).T
                 df_max_temps.reset_index(inplace=True)
