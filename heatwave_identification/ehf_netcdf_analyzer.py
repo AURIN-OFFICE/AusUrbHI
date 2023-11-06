@@ -231,6 +231,49 @@ class EHFAnalyzer:
         self.heatwave_days = pd.DataFrame.from_dict(heatwave_days, orient='index')
         self.extreme_heatwave_days = pd.DataFrame.from_dict(extreme_heatwave_days, orient='index')
 
+    def get_temperature_csv(self,
+                            output_folder: str,
+                            start_year: int = 16,
+                            end_year: int = 21,
+                            start_date: str = "12-01",
+                            end_date: str = "02-28",
+                            period_cross_multiple_year: bool = True) -> None:
+        """Create a csv file with SA1_CODE21 and max/min temperature data for each day from the period in each year.
+        """
+        for year in range(start_year, end_year + 1):
+            # create output dataframe title from data range, and add SA1_CODE21 before the data
+            date_ranges = pd.date_range(f'20{year}-{start_date}',
+                                        f'20{year}-{end_date}').strftime('%Y-%m-%d')
+            output_df = pd.DataFrame(date_ranges, columns=["SA1_CODE21"]).T
+            output_df.reset_index(inplace=True)
+
+            init_year = year - 1 if period_cross_multiple_year else year
+            period_max_data = self.max_xr.sel(time=slice(f'20{init_year}-{start_date}', f'20{year}-{end_date}'))
+            period_min_data = self.min_xr.sel(time=slice(f'20{init_year}-{start_date}', f'20{year}-{end_date}'))
+
+            for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
+                                      total=len(self.sa1_centroid_dict),
+                                      desc=f'Transforming temperature data for year 20{year}',
+                                      colour='cyan'):
+                x, y = centroid.x, centroid.y
+                while True:
+                    sa1_max_data = period_max_data.sel(lon=x, lat=y, method='nearest')
+                    sa1_min_data = period_min_data.sel(lon=x, lat=y, method='nearest')
+                    if sa1_max_data['max_temp'].isnull().all():
+                        x -= 0.05
+                    else:
+                        break
+
+                # insert the data into preallocated dataframe, and add sa1 code before the data
+                df_max_temps = pd.DataFrame(sa1_max_data['max_temp'].values, columns=[sa1]).T
+                df_min_temps = pd.DataFrame(sa1_min_data['min_temp'].values, columns=[sa1]).T
+                df_max_temps.reset_index(inplace=True)
+                df_min_temps.reset_index(inplace=True)
+
+                output_df = output_df._append(df_max_temps, ignore_index=True)
+                output_df = output_df._append(df_min_temps, ignore_index=True)
+            output_df.to_csv(f'{output_folder}/temperature_data_20{year}.csv')
+
 
 if __name__ == '__main__':
     analyzer = EHFAnalyzer()
@@ -245,9 +288,14 @@ if __name__ == '__main__':
     # analyzer.output_gdf = analyzer.output_gdf[new_column_order]
     # analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
     #                             'heatwave_analysis.shp')
+    #
+    # analyzer.get_all_heatwave_days(19, 19)
+    # analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
+    #                               'heatwave_days.csv')
+    # analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
+    #                                       'extreme_heatwave_days.csv')
 
-    analyzer.get_all_heatwave_days(19, 19)
-    analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
-                                  'heatwave_days.csv')
-    analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
-                                          'extreme_heatwave_days.csv')
+    analyzer.get_temperature_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/derrick/',
+                                 17, 17,
+                                 "03-14", "03-30",
+                                 False)
