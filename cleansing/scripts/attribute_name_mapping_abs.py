@@ -11,7 +11,7 @@ shp_exclude = ["id", "fid", "geometry", "pha_code", "pha_name", "SA2_MAIN16"]
 # dict_exclude = []
 # shp_exclude = []
 shapefile_path = "../_data/AusUrbHI HVI data processed/other ABS datasets/" + shapefile_name
-dict_path = "../_data/study area/2022-06-23-datasets_attribute_dictionary.json"
+dict_path = "../../_data/study area/2022-06-23-datasets_attribute_dictionary.json"
 dict_data = json.load(open(dict_path))
 
 long = []
