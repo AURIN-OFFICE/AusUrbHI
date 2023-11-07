@@ -245,7 +245,7 @@ class EHFAnalyzer:
             # create output dataframe title from data range, and add SA1_CODE21 before the data
             init_year = year - 1 if period_cross_multiple_year else year
             date_ranges = pd.date_range(f'20{init_year}-{start_date}',
-                                        f'20{init_year}-{end_date}').strftime('%Y-%m-%d')
+                                        f'20{year}-{end_date}').strftime('%Y-%m-%d')
 
             output_df = pd.DataFrame(date_ranges, columns=["SA1_CODE21"]).T
             output_df.reset_index(inplace=True)
