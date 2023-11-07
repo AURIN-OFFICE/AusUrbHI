@@ -11,7 +11,7 @@ class EHFAnalyzer:
 
     def __init__(self):
         self.sa1_centroid_dict = self._creat_sa1_centroid_dict()
-        self.ehf_xarray = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
+        self.ehf_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
                                           'EHF_heatwaves____daily.nc')
         self.max_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
                                       '2010_2022_max_temp_clipped.nc')
@@ -70,7 +70,7 @@ class EHFAnalyzer:
         for each SA1 centroid location during summer months (Dec, Jan, Feb) in each year.
         """
         for year in years:
-            ds_summer = self.ehf_xarray.sel(time=slice(f'20{year-1}-12-01', f'20{year}-02-28'))
+            ds_summer = self.ehf_xr.sel(time=slice(f'20{year-1}-12-01', f'20{year}-02-28'))
 
             # initiate new fields; explains will be given below
             average_EHF_value = f'avg_ehf_{year}'
@@ -191,13 +191,13 @@ class EHFAnalyzer:
         2. the dates of extreme heatwaves (EHF >=3)
         for each SA1 centroid location during summer months (Dec, Jan, Feb) in each year.
         """
-        # Ensure self.ehf_xarray['time'] is a DataArray and convert its values
+        # Ensure self.ehf_xr['time'] is a DataArray and convert its values
 
         heatwave_days = defaultdict(dict)
         extreme_heatwave_days = defaultdict(dict)
 
         for year in range(start_year, end_year + 1):
-            ds_summer = self.ehf_xarray.sel(time=slice(f'20{year - 1}-12-01', f'20{year}-02-28'))
+            ds_summer = self.ehf_xr.sel(time=slice(f'20{year - 1}-12-01', f'20{year}-02-28'))
 
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
@@ -231,25 +231,29 @@ class EHFAnalyzer:
         self.heatwave_days = pd.DataFrame.from_dict(heatwave_days, orient='index')
         self.extreme_heatwave_days = pd.DataFrame.from_dict(extreme_heatwave_days, orient='index')
 
-    def get_temperature_csv(self,
-                            output_folder: str,
-                            start_year: int = 16,
-                            end_year: int = 21,
-                            start_date: str = "12-01",
-                            end_date: str = "02-28",
-                            period_cross_multiple_year: bool = True) -> None:
-        """Create a csv file with SA1_CODE21 and max/min temperature data for each day from the period in each year.
+    def generate_sa1_date_csv(self,
+                              output_folder: str,
+                              start_year: int = 16,
+                              end_year: int = 21,
+                              period_cross_multiple_year: bool = True,
+                              start_date: str = "12-01",
+                              end_date: str = "02-28") -> None:
+        """Create a csv file with SA1_CODE21 and max/min temperature and EHF data
+        for each day from the period in each year.
         """
         for year in range(start_year, end_year + 1):
             # create output dataframe title from data range, and add SA1_CODE21 before the data
-            date_ranges = pd.date_range(f'20{year}-{start_date}',
-                                        f'20{year}-{end_date}').strftime('%Y-%m-%d')
+            init_year = year - 1 if period_cross_multiple_year else year
+            date_ranges = pd.date_range(f'20{init_year}-{start_date}',
+                                        f'20{init_year}-{end_date}').strftime('%Y-%m-%d')
+
             output_df = pd.DataFrame(date_ranges, columns=["SA1_CODE21"]).T
             output_df.reset_index(inplace=True)
+            output_max_df = output_min_df = output_ehf_df = output_df
 
-            init_year = year - 1 if period_cross_multiple_year else year
             period_max_data = self.max_xr.sel(time=slice(f'20{init_year}-{start_date}', f'20{year}-{end_date}'))
             period_min_data = self.min_xr.sel(time=slice(f'20{init_year}-{start_date}', f'20{year}-{end_date}'))
+            period_ehf_data = self.ehf_xr.sel(time=slice(f'20{init_year}-{start_date}', f'20{year}-{end_date}'))
 
             for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
                                       total=len(self.sa1_centroid_dict),
@@ -259,6 +263,7 @@ class EHFAnalyzer:
                 while True:
                     sa1_max_data = period_max_data.sel(lon=x, lat=y, method='nearest')
                     sa1_min_data = period_min_data.sel(lon=x, lat=y, method='nearest')
+                    sa1_ehf_data = period_ehf_data.sel(lon=x, lat=y, method='nearest')
                     if sa1_max_data['max_temp'].isnull().all():
                         x -= 0.05
                     else:
@@ -267,12 +272,18 @@ class EHFAnalyzer:
                 # insert the data into pre-allocated dataframe, and add sa1 code before the data
                 df_max_temps = pd.DataFrame(sa1_max_data['max_temp'].values, columns=[sa1]).T
                 df_min_temps = pd.DataFrame(sa1_min_data['min_temp'].values, columns=[sa1]).T
+                df_ehf_temps = pd.DataFrame(sa1_ehf_data['EHF'].values, columns=[sa1]).T
                 df_max_temps.reset_index(inplace=True)
                 df_min_temps.reset_index(inplace=True)
+                df_ehf_temps.reset_index(inplace=True)
 
-                output_df = output_df._append(df_max_temps, ignore_index=True)
-                output_df = output_df._append(df_min_temps, ignore_index=True)
-            output_df.to_csv(f'{output_folder}/temperature_data_20{year}.csv')
+                output_max_df = output_max_df._append(df_max_temps, ignore_index=True)
+                output_min_df = output_min_df._append(df_min_temps, ignore_index=True)
+                output_ehf_df = output_ehf_df._append(df_ehf_temps, ignore_index=True)
+
+            output_max_df.to_csv(f'{output_folder}/max_temp_data_20{year}.csv')
+            output_min_df.to_csv(f'{output_folder}/min_temp_data_20{year}.csv')
+            output_ehf_df.to_csv(f'{output_folder}/ehf_data_20{year}.csv')
 
 
 if __name__ == '__main__':
@@ -295,7 +306,6 @@ if __name__ == '__main__':
     # analyzer.extreme_heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
     #                                       'extreme_heatwave_days.csv')
 
-    analyzer.get_temperature_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/derrick/',
-                                 17, 17,
-                                 "03-14", "03-30",
-                                 False)
+    analyzer.generate_sa1_date_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST',
+                                   17, 17, True,
+                                   "11-01", "03-31")
