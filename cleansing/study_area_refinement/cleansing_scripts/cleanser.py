@@ -1,7 +1,6 @@
-import csv
 import warnings
 import geopandas as gpd
-from .phidu_short_field_name_dict import phidu_short_field_name_dict
+from cleansing.scripts.phidu_short_field_name_dict import phidu_short_field_name_dict
 
 warnings.filterwarnings('ignore', '.*Column names longer than 10 characters will be '
                                   'truncated when saved to ESRI Shapefile.*')
