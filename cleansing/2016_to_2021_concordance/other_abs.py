@@ -27,7 +27,8 @@ for filename in os.listdir(folder_path):
                 csv_21_column = "SA1_CODE_2021"
                 shp_16_field = "SA1_MAIN16"
                 shp_21_field = "SA1_CODE21"
-                exclude_division_field_list = ['Shape', 'id', 'sa1_7dig16', 'SA1_MAIN16', 'geometry']
+                exclude_division_field_list = ['Shape', 'id', 'sa1_7dig16', 'SA1_MAIN16', 'geometry', "SA1_CODE21"]
+                geolevel = "sa1"
 
             # non SEIFA
             else:
@@ -40,7 +41,9 @@ for filename in os.listdir(folder_path):
                 exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16',
                                                'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
                                                'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
-                                               'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry']
+                                               'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry', "SA2_CODE21"]
+                geolevel = "sa2"
+
             ConcordanceMapper(csv_df,
                               study_area_df,
                               csv_16_column,
@@ -50,7 +53,8 @@ for filename in os.listdir(folder_path):
                               shp_16_field,
                               shp_21_field,
                               exclude_division_field_list,
-                              output_folder_path).map()
+                              output_folder_path,
+                              geolevel).map()
 
         else:
             new_file_name = os.path.basename(filename).replace('.shp', '_2021_concordance.shp')

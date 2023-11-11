@@ -15,7 +15,7 @@ class DisaggregationMapper:
         """Divide a field value by a divisor considering format"""
         try:
             value = float(str(value).replace(",", ""))
-            return round(value * divisor, 1)
+            return round(value * divisor, 2)
         except ValueError:
             if all(sub not in str(value) for sub in ['~', '-', '**', '*', 'nan']):
                 print(f"ValueError Warning: field value is not a number")
