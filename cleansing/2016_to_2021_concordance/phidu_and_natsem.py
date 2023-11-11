@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import geopandas as gpd
-from concordance_mapper import ConcordanceMapper
+from scripts.concordance_mapper import ConcordanceMapper
 
 csv_16_column = "SA2_MAINCODE_2016"
 csv_21_column = "SA2_CODE_2021"

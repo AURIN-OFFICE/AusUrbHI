@@ -1,8 +1,7 @@
 import os
-import shutil
 import pandas as pd
 import geopandas as gpd
-from concordance_mapper import ConcordanceMapper
+from scripts.concordance_mapper import ConcordanceMapper
 
 sa1_csv_path = "../../_data/study area/CG_SA1_2016_SA1_2021.csv"
 sa1_csv_df = pd.read_csv(sa1_csv_path)
