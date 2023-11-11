@@ -2,6 +2,7 @@ import os
 import json
 import geopandas as gpd
 import pandas as pd
+import numpy as np
 from geopandas import GeoDataFrame
 from tqdm import tqdm
 
@@ -40,10 +41,12 @@ class ConcordanceMapper:
     def map(self):
         # Drop NA values and standardize the data type for the 2016 column in mapping_csv_df
         self.mapping_csv_df.dropna(subset=[self.csv_16_column], inplace=True)
-        self.mapping_csv_df[self.csv_16_column] = self.mapping_csv_df[self.csv_16_column].astype(float).astype('int64').astype(str)
+        self.mapping_csv_df[self.csv_16_column] = (self.mapping_csv_df[self.csv_16_column].
+                                                   astype(float).astype('int64').astype(str))
 
         # Read shapefile data into a GeoDataFrame
         gdf = gpd.read_file(self.file_path)
+        gdf = gdf.replace([np.nan, None, '', '~', '-', '**', '*', 'nan'], 0)
 
         # Create dictionary for fast lookup of 2021 geometry
         study_area_dict = self.study_area_gdf.set_index(self.shp_21_field)['geometry'].to_dict()
@@ -77,8 +80,9 @@ class ConcordanceMapper:
                     if col not in self.exclude_division_field_list:
                         try:
                             val = float(new_row[col]) if new_row[col] else 0
-                            if any(i in self._get_attribute_full_name_dict[col].lower()
-                                   for i in ["average", "median", "mean"]):
+                            if (col in self._get_attribute_full_name_dict and
+                                    any(i in self._get_attribute_full_name_dict[col].lower()
+                                        for i in ["average", "median", "mean"])):
                                 new_row[col] = round(val, 2)
                             else:
                                 new_row[col] = round(val * match['RATIO_FROM_TO'], 2)
@@ -98,20 +102,24 @@ class ConcordanceMapper:
         # values for the latter ones.
         merged_rows = pd.DataFrame(columns=new_rows.columns)
         grouped = new_rows.groupby(self.shp_21_field)
+
         for name, group in grouped:
             merged_row = {}
             for col in group.columns:
-                print(col, self._get_attribute_full_name_dict(col).lower())
                 # Exclude division fields are kept as they are
                 if col in self.exclude_division_field_list:
                     merged_row[col] = group[col].iloc[0]
                 # For specified fields, set the value to "merged"
                 elif col in ["RATIO", "INDIV_QLTY", "OVR_QLTY"]:
-                    merged_row[col] = "merged"
+                    if len(group) > 1:
+                        merged_row[col] = "merged"
+                    else:
+                        merged_row[col] = group[col].iloc[0]
                 # Calculate average or sum based on the column name criteria
                 else:
-                    if any(keyword in self._get_attribute_full_name_dict(col).lower() for keyword in
-                           ["average", "median", "mean"]):
+                    if (col in self._get_attribute_full_name_dict and
+                            any(i in self._get_attribute_full_name_dict[col].lower()
+                                for i in ["average", "median", "mean"])):
                         merged_row[col] = group[col].mean()
                     else:
                         merged_row[col] = group[col].sum()
@@ -121,7 +129,6 @@ class ConcordanceMapper:
 
         # Create new GeoDataFrame with updated rows
         new_gdf = GeoDataFrame(new_rows, geometry='geometry', crs=self.study_area_gdf.crs)
-        assert len(new_gdf) == len(gdf)
 
         # Save the new GeoDataFrame as a shapefile
         output_filename = self.filename.replace('.shp', '_2021_concordance.shp')

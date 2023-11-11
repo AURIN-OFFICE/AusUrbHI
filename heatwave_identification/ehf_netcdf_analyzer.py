@@ -12,7 +12,7 @@ class EHFAnalyzer:
     def __init__(self):
         self.sa1_centroid_dict = self._creat_sa1_centroid_dict()
         self.ehf_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
-                                          'EHF_heatwaves____daily.nc')
+                                      'EHF_heatwaves____daily.nc')
         self.max_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
                                       '2010_2022_max_temp_clipped.nc')
         self.min_xr = xr.open_dataset('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/'
@@ -285,20 +285,51 @@ class EHFAnalyzer:
             output_min_df.to_csv(f'{output_folder}/min_temp_data_20{year}.csv')
             output_ehf_df.to_csv(f'{output_folder}/ehf_data_20{year}.csv')
 
+    def identify_long_intense_heatwaves(self, start_year: int = 11, end_year: int = 22) -> None:
+        """Find dates where ends >= 5, and EHF >= 3 on each following day within ends.
+        """
+        long_intense_heatwave_days = defaultdict(dict)
+
+        for year in range(start_year, end_year + 1):
+            ds_summer = self.ehf_xr.sel(time=slice(f'20{year - 1}-11-01', f'20{year}-03-31'))
+
+            for sa1, centroid in tqdm(self.sa1_centroid_dict.items(),
+                                      total=len(self.sa1_centroid_dict),
+                                      desc=f'Finding long intense heatwave days for year 20{year}',
+                                      colour='cyan'):
+                x, y = centroid.x, centroid.y
+                while True:
+                    point_data = ds_summer.sel(lon=x, lat=y, method='nearest')
+                    if point_data['EHF'].isnull().all():
+                        x -= 0.05
+                    else:
+                        break
+
+                # Heatwave days (ends >= 1 and EHF >= 5 on each day)
+                long_intense_heatwave_dates = \
+                    (point_data.where((point_data['ends'] / np.timedelta64(1, 'D') >= 5)
+                                      & (point_data['EHF'] >= 3))
+                     .dropna(dim='time', how='all')
+                     .time.values)
+
+                long_intense_heatwave_days[sa1][year] = (
+                    ', '.join([date.strftime('%Y-%m-%d') for date in long_intense_heatwave_dates]))
+        self.long_intense_heatwave_days = pd.DataFrame.from_dict(long_intense_heatwave_days, orient='index')
+
 
 if __name__ == '__main__':
     analyzer = EHFAnalyzer()
 
-    analyzer.ehf_statistics_analysis()
-    analyzer.percentile_deviation_analysis()
-    new_column_order = [
-        'SA1_CODE21', 'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16', 'hw_len_16', 'hw_days_16',
-        'eh_len_16', 'eh_days_16', 'ex_days_16', 'avg_dev_21', 'max_dev_21', 'avg_ehf_21',
-        'max_ehf_21', 'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21', 'geometry'
-    ]
-    analyzer.output_gdf = analyzer.output_gdf[new_column_order]
-    analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
-                                'heatwave_analysis.shp')
+    # analyzer.ehf_statistics_analysis()
+    # analyzer.percentile_deviation_analysis()
+    # new_column_order = [
+    #     'SA1_CODE21', 'avg_dev_16', 'max_dev_16', 'avg_ehf_16', 'max_ehf_16', 'hw_len_16', 'hw_days_16',
+    #     'eh_len_16', 'eh_days_16', 'ex_days_16', 'avg_dev_21', 'max_dev_21', 'avg_ehf_21',
+    #     'max_ehf_21', 'hw_len_21', 'hw_days_21', 'eh_len_21', 'eh_days_21', 'ex_days_21', 'geometry'
+    # ]
+    # analyzer.output_gdf = analyzer.output_gdf[new_column_order]
+    # analyzer.output_gdf.to_file('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST/'
+    #                             'heatwave_analysis.shp')
 
     # analyzer.get_all_heatwave_days(19, 19)
     # analyzer.heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/peninsula/'
@@ -309,3 +340,7 @@ if __name__ == '__main__':
     # analyzer.generate_sa1_date_csv('../_data/AusUrbHI HVI data processed/Longpaddock SILO LST',
     #                                17, 17, True,
     #                                "11-01", "03-31")
+
+    analyzer.identify_long_intense_heatwaves()
+    analyzer.long_intense_heatwave_days.to_csv('../_data/AusUrbHI HVI data unprocessed/Longpaddock SILO LST/derrick/'
+                                               'long_intense_heatwave_days.csv')

@@ -29,8 +29,10 @@ for filename in tqdm(os.listdir(folder_path),
         else:
             geolevel = 'SA2'
 
-        equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, geolevel, "equal")
-        population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list, geolevel, "population")
+        equal_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list,
+                                                       geolevel, "equal")
+        population_divided_gdf = mapper.divide_field_values(gdf, exclude_division_field_list,
+                                                            geolevel, "population")
         no_divided_gdf = gdf.copy()
 
         # save the file

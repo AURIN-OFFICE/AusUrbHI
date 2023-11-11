@@ -38,9 +38,9 @@ for filename in os.listdir(folder_path):
                 csv_21_column = "SA2_CODE_2021"
                 shp_16_field = "SA2_MAIN16"
                 shp_21_field = "SA2_CODE21"
-                exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16',
-                                               'state_code', 'state_name', 'sa2_code5d', 'sa2_name16',
-                                               'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
+                exclude_division_field_list = ['Shape', 'id', 'sa2_name_2', 'yr', 'SA2_MAIN16', 'STATE_CODE',
+                                               'STATE_NAME', 'index', 'state_code', 'state_name', 'sa2_code5d',
+                                               'sa2_name16', 'gccsa_code', 'gccsa_name', 'sa4_code16', 'sa4_name16',
                                                'sa3_code16', 'sa3_name16', 'sa2_name16', 'geometry', "SA2_CODE21"]
                 geolevel = "sa2"
 
