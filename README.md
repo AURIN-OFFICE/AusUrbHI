@@ -168,6 +168,11 @@ raster input include 2m surface rasters in NSW, as well as two 30m surface raste
 
 
 ## Health Indices Generation
+<p align="center">
+    <img height="350" src="img/indices.png" alt=""/>
+    <br>
+    <em>Indices and sub-indices</em>
+</p>
 
 <p align="center">
     <img height="350" src="img/indices_data.png" alt="Heat Health Indices Data"/>
