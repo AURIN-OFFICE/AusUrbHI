@@ -108,7 +108,7 @@ https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQala
 EHF is calculated based on the definition and algorithm provided by BOM.
 
 <p align="center">
-    <img height="350" src="img/ehf_algorithm.png" alt="EHF Algorithm"/>
+    <img height="450" src="img/ehf_algorithm.png" alt="EHF Algorithm"/>
     <br>
     <em>EHF Algorithm</em>
 </p>
