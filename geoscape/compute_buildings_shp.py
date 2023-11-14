@@ -2,6 +2,7 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 
+
 class StudyAreaProcessor:
     def __init__(self, meshblock_gdf, study_area_gdf, building_gdf):
         """

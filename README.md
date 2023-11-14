@@ -1,6 +1,10 @@
-# AusUrbHI
+# AusUrbHI Heat Vulnerability and Urban Livability Case Study Overview
 This is the repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project. The study aims to analyze the number and cause of emergency department (ED) presentations, hospitalizations, and deaths during a heatwave using person-level deidentified linked health data. The methodology involves determining the health component of the sensitivity sub-indicator, normalizing and categorizing variables, and conducting a Poisson multivariable regression to calculate the Heat Vulnerability Index (HVI) score. Spatial smoothing will be applied to the geographic data to protect data privacy and ensure statistical stability while adjusting for age, sex, and comorbidities. The resulting heat health vulnerability indicator will reveal the relative vulnerability of locations across the study area, and hotspot analysis will be performed to investigate statistically significant locations of heat health vulnerability. This comprehensive approach combines statistical methods and spatial analysis techniques to provide valuable insights into heat health vulnerability.
-
+<p align="center">
+    <img width="350" src="img/justification.png" alt=""/>
+    <br>
+    <em>Source: http://www.bom.gov.au/state-of-the-climate/australias-changing-climate.shtml</em>
+</p>
 <p align="center">
     <img width="700" src="img/ausurbhi.png" alt="Project diagram"/>
     <br>
@@ -12,52 +16,172 @@ This is the repository for scripts generated for the Australian Urban Health Ind
     <em>Systen e-Infrastructure</em>
 </p>
 
-## Aurin Datasets Preparation
-Scripts for obtaining and derive the study area data for HVI and urban liveability case studies.
+## Study area
+<p align="center">
+    <img width="350" src="img/study area.png" alt=""/>
+    <br>
+    <em>Case Study Area</em>
+</p>
+Population:
+
+Greater Sydney - 4.8 million \
+Wollongong - 0.3 million \
+Newcastle - 0.17 million \
+Maitland - 0.5 million \
+Tweed heads - 0.65 million \
+Albury - 0.05 million
+
+## Datasets
+Full data Inventory:
+https://unimelbcloud.sharepoint.com/:x:/r/teams/AURIN_office/_layouts/15/Doc.aspx?sourcedoc=%7B3AE490AA-A0E8-42AA-AF0C-0EA318798D03%7D&file=Full%20Data%20Inventory.xlsx&action=default&mobileredirect=true
+
+Short Version:
+https://unimelbcloud.sharepoint.com/:x:/r/teams/AURIN_office/_layouts/15/Doc.aspx?sourcedoc=%7BE3B7126E-0F94-4A0E-AFAB-7342D14F1670%7D&file=data%20list.xlsx&action=default&mobileredirect=true
+
+Linked Health Data Application Procedure Documentation:
+https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQalaZxQ/edit#gid=0
+
+### AURIN ABS Socio-Demographic Datasets
+- Obtained from [AURIN Data Provider](https://data.aurin.org.au/) and the [ABS GeoPackages downloader](https://www.abs.gov.au/census/find-census-data/geopackages?release=2021&geography=AUST&table=G01&gda=GDA2020)
+- ABS census 2016 and 2021
+- ABS non-census datasets, e.g., SEIFA, income, etc.
+
+### AURIN Health-Related Datasets
+- PHIDU diseases, conditions, risk factors, etc.
+- NATSEM indicators
+- NHSD health service locations
+  - Density of numbers of GPs and EDs within buffered region
+
+### Built and Natual Environment Data
+- Geoscape
+  - Buildings - roof height, material, cooling, building area, levels, swimming pools
+  - surface cover - % of bare earth, road, vegetation, built-up, water, building ,etc.
+  - closeness to hydro body, train station, and green space
+
+### Temperature Data
+- Longpaddock SILO
+  - Average and max summer percentile deviation
+  - Excess Heat Factor (EHF) average and maximum
+  - Days and average duration of excess heat, heatwave, and extreme heatwave days
+
+### SA1-Level Individual Record Linked Health Datasets
+- APDC admitted-patient-data-coll: 298,120,88 records for 4,540,451 patients
+- EDDC emergency-department-data-coll: 23,330,967 records for 4,273,272 patients
+- CODURF cause-of-death-unit-record-file: 221,787 records for 221,751 patients
+- RBDM registry-of-births-deaths-and-marriages-death-registrations: 264, 594 records for 264,530 patients
+
+### RMIT Urban Observatory Livability Data
+<p align="center">
+    <img height="350" src="img/livability.png" alt=""/>
+    <br>
+    <em>Livability Domains and Indicators</em>
+</p>
+
+## Data Pre-pocessing
+### AURIN vector data processing
+- transformation and spatialization if needed (e.g., NHSD)
+- refinement to study area
+- 2016 to 2021 ASGS concordance 
+  - n:m mapping resolution
+- Disaggreation (PHA and SA2 to SA1)
+  - population based
+  - number of sub-division area based
+  - no division
+<p align="center">
+    <img height="250" src="img/concordance.png" alt="SA1 Data Concordance"/>
+    <br>
+    <em>SA1 Data Concordance</em>
+</p>
+
+### Temperature raster data cube building, storage, and analysis
+<p align="center">
+    <img height="250" src="img/lst.png" alt="Creating Land Surface Temperature Data Cube from Raster"/>
+    <br>
+    <em>Creating Land Surface Temperature Data Cube from Raster</em>
+</p>
 
 <p align="center">
-    <img height="250" src="img/study_area.png" alt="Study area"/>
+    <img height="250" src="img/ehf.png" alt="Deriving EHI and EHF to Identify Heat Days and Heat Waves"/>
     <br>
-    <em>Study area</em>
+    <em>Deriving EHI and EHF to Identify Heat Days and Heat Waves</em>
 </p>
+EHF is calculated based on the definition and algorithm provided by BOM.
+
 <p align="center">
-    <img height="250" src="img/data.png" alt="Data"/>
+    <img height="350" src="img/ehf_algorithm.png" alt="EHF Algorithm"/>
     <br>
-    <em>Data</em>
+    <em>EHF Algorithm</em>
 </p>
+
+Datasets we initially planned to use:
+
+| Dataset   | Spatial Resolution     | Temporal Resolution                                      |
+|-----------|------------------------|----------------------------------------------------------|
+| MODIS     | 250m - 1km             | Daily, 8-day, 16-day, and monthly (depending on product) |
+| Landsat-8 | 15m - 100m             | 16 days                                                  |
+| BOM/SILO  | Varies (station-based) | Daily, monthly, and annual                               |
+| ERA5      | ~31km                  | Hourly                                                   |
+
+**MODIS (Moderate Resolution Imaging Spectroradiometer)** provides data with a spatial resolution ranging from 250 meters to 1 kilometer, depending on the specific product. The temporal resolution varies as well, with daily, 8-day, 16-day, and monthly options available.\
+**Landsat-8** offers data with a spatial resolution of 15 meters for the panchromatic band, 30 meters for the visible and near-infrared bands, and 100 meters for the thermal infrared bands. Landsat-8 has a 16-day repeat cycle, which means it captures data for the same location every 16 days.\
+**BOM** (Bureau of Meteorology, Australia) provides weather station-based data, and its spatial resolution varies depending on the density and distribution of weather stations. BOM data is typically available on daily, monthly, and annual timescales.\
+**Longpaddock SILO** Processed weather station data\
+**ERA5**, a reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF), has a spatial resolution of approximately 31 kilometers. It provides data at an hourly temporal resolution.\
+**BOM** The heatwave data (EHF) is available from late 2018 on wards only.\
+
+Key processing steps:
+- download max/min daily temperature netcdf files from 2010 to 2022
+- merge nc to 2010_2022_max_temp.nc and 2011_2022_min_temp.nc
+- refine to study area and buff by 0.5, fill nan value
+- derive EHI, EHF, tx90, and tn90
+- perform SA1 level analysis of the previously mentioned variables (e.g., days and average) and derive shapefile
+
+### Geoscape building polygon data transformation and statistics
 <p align="center">
-    <img height="250" src="img/output.png" alt="Refined data"/>
+    <img height="350" src="img/buildings.png" alt="Building Data Statistics"/>
     <br>
-    <em>Refined data</em>
+    <em>Building Data Statistics</em>
 </p>
 
-## Data Preprocessing and Cleansing
-1. Obtain data from sources such as the [AURIN Data Provider](https://data.aurin.org.au/) or the [ABS GeoPackages downloader](https://www.abs.gov.au/census/find-census-data/geopackages?release=2021&geography=AUST&table=G01&gda=GDA2020). Make sure the data is in shapefile or geojson format.
-2. study area refinement using scripts under /study_area_refinement.
-3. convert to 2021 ASGS standard using scripts under /2016_to_2021_concordance with concordance files.
-4. perform disaggregation to ensure all data is at SA1 level using scripts under /disaggregation. Three disaggregation algorithms are used: divided by number of subdivision regions, by population, and no division.
+### Geoscape landcover raster data analysis integration and statistics
+<p align="center">
+    <img height="350" src="img/surface cover.png" alt="Land Cover Data Transformation and Statistics"/>
+    <br>
+    <em>Land Cover Data Transformation and Statistics</em>
+</p>
+raster input include 2m surface rasters in NSW, as well as two 30m surface rasters ACTNSW_SURFACECOVER_30M_Z55.tif and Z56.tif (others are not interesting with the study area)
 
-## Surface Raster Processing
-raster input: 
-	2m surface rasters in NSW
-	two 30m surface rasters ACTNSW_SURFACECOVER_30M_Z55.tif and Z56.tif (others are not interesting with the study area)
+- preprocess 30m raster
+  - clip the two 30m rasters with study area
+  - resample the rasters to 2m
+- mosaic dataset creation
+  - create a mosaic dataset in GDA94
+  - add all rasters (original 30m and 2m) to it
+  - avoid duplicated count from overlapping regions by setting Mosaic rule (By Attribute)
+- derive landuse shapefile
+  - reclassify symbology to value with 0-12 from 256 (stretch -> discrete)
+  - zonal histogram analysis
+  - convert to shapefile (table to excel, and postprocessing)
+  - manual validation and change field name
 
-preprocess 30m raster
-- [x] clip the two 30m rasters with study area
-- [x] resample the rasters to 2m
+### Linked data curation, processing, and analysis
 
-mosaic dataset creation
-- [x] create a mosaic dataset in GDA94
-- [x] add all rasters (original 30m and 2m) to it
-- [x] avoid duplicated count from overlapping regions by setting Mosaic rule (By Attribute)
 
-derive landuse shapefile
-- [x] reclassify symbology to value with 0-12 from 256 (stretch -> discrete)
-- [x] zonal histogram analysis
-- [x] convert to shapefile (table to excel, and postprocessing)
-- [x] manual validation and change field name
+## Health Indices Generation
 
-## Building Point Cloud Processing
+<p align="center">
+    <img height="350" src="img/indices_data.png" alt="Heat Health Indices Data"/>
+    <br>
+    <em>Heat Health Indices Data</em>
+</p>
+
+<p align="center">
+    <img height="350" src="img/indices_corr.png" alt="Heat Health Indices Correlation"/>
+    <br>
+    <em>Heat Health Indices Correlation</em>
+</p>
+
+## Microsoft building footprint Building Point Cloud Data Processing
 The building footprint processing methodology consists of three steps. 
 1.	Hole Removal: A BuildingHoleRemover class is initialized with an input shapefile of building polygons. It reads the shapefile, removes small holes from the building polygons based on a minimum area, and saves the processed polygons to a new shapefile.
 2.	Rebuffering: A BuildingReBuffer class is initialized with the input shapefile of processed building polygons. It applies a buffer to the building polygons and saves the buffered polygons to a new shapefile.
@@ -74,56 +198,6 @@ An example result of the approach is shown below:
     <br>
     <em>Comparison of processing result</em>
 </p>
-
-datasets:
-
-- OSM building for urban area data.
-- Microsoft building footprint data for rural area.
-- NSW spatial service building point cloud data for cross-reference.
-
-## Land Surface Temperature (LST) Data Cube Building and Excess Heat Factor (EHF) Calculation
-Calculating EHF (excess heat factor - https://www.mdpi.com/1660-4601/12/1/227) for identifying heatwave periods.
-
-The approach consists of two steps. In the first step, we obtain MODIS data containing minimum and maximum daily/nighttime temperatures for all SA1 areas in the study area within NSW, Australia. We use the Google Earth Engine API to load the MODIS data collection for temperature data, specifically using the MOD11A1 dataset for daily land surface temperature data. Then, we extract the minimum and maximum daily/night time temperature bands from the MODIS data collection and calculate the minimum and maximum temperatures for the study area. Finally, we clip the temperature data to export the data as a NetCDF file.
-
-(in progress) In the second step, we plan to use Excess Heat Factor (EHF) to identify heatwaves in the study area. The EHF is calculated using the temperature data to determine the severity of a heatwave event. It comprises two components: the first is the Excess Heat Index (EHI), which measures the deviation of the daily temperature from the average temperature of the previous 30 days, and the second is the Acclimatization Index (AI), which measures how well the population is adapted to the current heat conditions. Combine these two indices to calculate the EHF. To identify heatwaves, we plan to apply a threshold to the EHF values, such as using the 90th percentile or another appropriate threshold for your study. By analyzing the EHF values over time and across the SA1 areas in the study area within NSW, Australia, we will then be able to identify periods and locations of heatwaves, enabling better planning and mitigation strategies for public health and safety.
-We choose to use NetCDF data cube rather than common file formats such as csv, geojson, or shapefile. This is because the NetCDF data cube format is better suited for storing the MODIS temperature data, as it can efficiently handle the continuous, multidimensional nature of the dataset and provide convenient access to the data and metadata.
-
-<p align="center">
-    <img width="250" src="img/data_cube.png" alt="An example datacube shown in QGIS"/>
-    <br>
-    <em>An example datacube shown in QGIS</em>
-</p>
-
-Here is the list of datasets we are planning to use and compare the results.
-
-| Dataset   | Spatial Resolution     | Temporal Resolution                                      |
-|-----------|------------------------|----------------------------------------------------------|
-| MODIS     | 250m - 1km             | Daily, 8-day, 16-day, and monthly (depending on product) |
-| Landsat-8 | 15m - 100m             | 16 days                                                  |
-| BOM       | Varies (station-based) | Daily, monthly, and annual                               |
-| ERA5      | ~31km                  | Hourly                                                   |
-
-**MODIS (Moderate Resolution Imaging Spectroradiometer)** provides data with a spatial resolution ranging from 250 meters to 1 kilometer, depending on the specific product. The temporal resolution varies as well, with daily, 8-day, 16-day, and monthly options available.
-
-**Landsat-8** offers data with a spatial resolution of 15 meters for the panchromatic band, 30 meters for the visible and near-infrared bands, and 100 meters for the thermal infrared bands. Landsat-8 has a 16-day repeat cycle, which means it captures data for the same location every 16 days.
-
-**BOM** (Bureau of Meteorology, Australia) provides weather station-based data, and its spatial resolution varies depending on the density and distribution of weather stations. BOM data is typically available on daily, monthly, and annual timescales.
-
-**ERA5**, a reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF), has a spatial resolution of approximately 31 kilometers. It provides data at an hourly temporal resolution.
-
-**BOM** The heatwave data (EHF) is available from late 2018 on wards only.
-
-**Longpaddock SILO** Processed weather station data
-
-We choose to use the SILO dataset with the following process steps.
-- [x] download max/min daily temperature netcdf files from 2010 to 2022
-- [x] merge nc to 2010_2022_max_temp.nc and 2011_2022_min_temp.nc
-- [x] refine to study area and buff by 0.5
-- [x] fill nan value
-- [x] derive EHF, tx90, and tn90
-- [x] merge result to one nc file
-- [x] perform SA1 level analysis and derive shapefile
 
 ## SNOMED-CT-AU to ICD-10 Mapping
 The package performs code mapping between SNOMED-CT-AU and ICD-10. The methodology involved mapping SNOMED CT codes to ICD codes using a mock-up dataset with 4,000+ entries. Four steps were taken: 1) using Snapper to resolve synonyms and unofficial names, 2) using SnoMap, 3) using the IHTSDO international SNOMED mapping tool for cross-validation, and 4) using the I-MAGIC mapper, which resolved some unmatched entries. The final result was 99.68% recall, with 13 unmatched codes.
