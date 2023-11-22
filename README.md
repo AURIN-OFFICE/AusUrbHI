@@ -171,12 +171,6 @@ raster input include 2m surface rasters in NSW, as well as two 30m surface raste
     <em>NHSD service accessibility</em>
 </p>
 
-<p align="center">
-    <img height="350" src="img/service_area_2.png" alt=""/>
-    <br>
-    <em>NHSD service accessibility polygons</em>
-</p>
-
 input: 
 - osm line shapefile
 - nhsd service location point shapefile
