@@ -32,7 +32,7 @@ for key, service_gdf in service_gdfs.items():
         count_intersections = intersections.sum()
 
         # Calculate the density (number of polygons per square km of SA1 area)
-        density = count_intersections / sa1_row.AREASQKM21
+        density = round(count_intersections / sa1_row.AREASQKM21, 2)
         density_data[f"{key}_den"].append(density)
 
 # Add density data to the study area GeoDataFrame
