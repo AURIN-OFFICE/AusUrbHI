@@ -19,21 +19,30 @@ service_files = {
 # Load service area shapefiles
 service_gdfs = {key: gpd.read_file(path) for key, path in service_files.items()}
 
-# Calculate densities and add new fields to the study area GeoDataFrame
-for key in service_gdfs:
-    # Initialize the new field with zeros
-    study_area_gdf[f"{key}_den"] = 0.0
-    for index, sa1_row in tqdm(study_area_gdf.iterrows(),
-                               total=len(study_area_gdf),
-                               desc=f"Calculating {key} density"):
+# Prepare a dictionary to hold our density data
+density_data = {f"{key}_den": [] for key in service_gdfs}
+
+# Calculate densities
+for key, service_gdf in service_gdfs.items():
+    for sa1_row in tqdm(study_area_gdf.itertuples(index=False),
+                        total=study_area_gdf.shape[0],
+                        desc=f"Calculating {key} density"):
         # Count the number of intersecting polygons
-        intersections = service_gdfs[key].geometry.intersects(sa1_row.geometry)
+        intersections = service_gdf.geometry.intersects(sa1_row.geometry)
         count_intersections = intersections.sum()
 
         # Calculate the density (number of polygons per square km of SA1 area)
-        density = count_intersections / (sa1_row['AREASQKM21'] * 1e6)
-        study_area_gdf.at[index, f"{key}_den"] = density
+        density = count_intersections / sa1_row.AREASQKM21
+        density_data[f"{key}_den"].append(density)
+
+# Add density data to the study area GeoDataFrame
+for key, values in density_data.items():
+    study_area_gdf[key] = values
+
+# Keep only the specified fields
+fields_to_keep = ['SA1_CODE21', 'geometry'] + list(density_data.keys())
+study_area_gdf = study_area_gdf[fields_to_keep]
 
 # Save the modified study area GeoDataFrame as a new shapefile
-output_path = r"..\_data\AusUrbHI HVI data processed\NHSD\gp_ed_within_network_threshold.shp"
+output_path = "../_data/AusUrbHI HVI data processed/NHSD/gp_ed_within_network_threshold.shp"
 study_area_gdf.to_file(output_path)
