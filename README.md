@@ -164,6 +164,18 @@ raster input include 2m surface rasters in NSW, as well as two 30m surface raste
   - convert to shapefile (table to excel, and postprocessing)
   - manual validation and change field name
 
+### Service area network distance analysis
+input: 
+- osm line shapefile
+- nhsd service location point shapefile
+
+step (using ArcGIS Pro):
+- make sure CRS is consistent, and refine shapefiles to sudy area
+- create feature dataset in geodatabase, add the line data to it, and create network dataset
+- Analysis (top task bar) -> Network Analysis -> Service Area
+- service area layer (top task bar) -> import facilities 
+- run
+
 ### Linked data curation, processing, and analysis
 
 
