@@ -183,6 +183,17 @@ step (using ArcGIS Pro):
 - run service area analysis, save resulting polygons as <gp>/<ed>_polygons_<1000>/<2000>/<3000>.shp
 - generating a shapefile with service accessibility (e.g., number of GPs within 1000m) divided by SA1 area (Python)
 
+<p align="center">
+    <img height="350" src="img/closest_facility.png" alt=""/>
+    <br>
+    <em>Closest train stations from each SA1</em>
+</p>
+
+step changed (ArcGIS Pro):
+- using Closest Facility instead of Service Area
+- define train stations as facilities and SA1 centroids as incidents
+- compute route length for each SA1 centroid to the closest train station
+
 ### Linked data curation, processing, and analysis
 
 
