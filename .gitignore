@@ -1,7 +1,6 @@
 __pycache__
 .idea/
 _data/
-cleansing/
 .ipynb_checkpoints/
 .venv/
 .venv python3.11 bak/
