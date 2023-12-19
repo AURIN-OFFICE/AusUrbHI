@@ -45,10 +45,11 @@ https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQala
 - Obtained from [AURIN Data Provider](https://data.aurin.org.au/) and the [ABS GeoPackages downloader](https://www.abs.gov.au/census/find-census-data/geopackages?release=2021&geography=AUST&table=G01&gda=GDA2020)
 - ABS census 2016 and 2021
 - ABS non-census datasets, e.g., SEIFA, income, etc.
+- NATSEM indicators
 
 ### AURIN Health-Related Datasets
 - PHIDU diseases, conditions, risk factors, etc.
-- NATSEM indicators
+- ABS Health & Disability
 - NHSD health service locations
   - Density of numbers of GPs and EDs within buffered region
 
