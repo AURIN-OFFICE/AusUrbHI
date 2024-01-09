@@ -180,6 +180,7 @@ step (using ArcGIS Pro):
 - make sure CRS is consistent, and refine shapefiles to sudy area
 - create feature dataset in geodatabase, add the line data to it, and create network dataset
 - Analysis (top task bar) -> Network Analysis -> Service Area
+- build network dataset (right-click the dataset from geodatabase)
 - service area layer (top task bar) -> import facilities 
 - run service area analysis, save resulting polygons as <gp>/<ed>_polygons_<1000>/<2000>/<3000>.shp
 - generating a shapefile with service accessibility (e.g., number of GPs within 1000m) divided by SA1 area (Python)
