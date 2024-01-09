@@ -183,7 +183,7 @@ step (using ArcGIS Pro):
 - build network dataset (right-click the dataset from geodatabase)
 - service area layer (top task bar) -> import facilities 
 - run service area analysis, save resulting polygons as <gp>/<ed>_polygons_<1000>/<2000>/<3000>.shp
-- generating a shapefile with service accessibility (e.g., number of GPs within 1000m) divided by SA1 area (Python)
+- generating a shapefile with service accessibility (e.g., number of GPs within 1000m) divided by SA1 area (Python). This could be done with tools such as Spatial Join and Summary Statistics
 
 <p align="center">
     <img height="350" src="misc/img/closest_facility.png" alt=""/>
