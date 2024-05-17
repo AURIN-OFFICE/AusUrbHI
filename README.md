@@ -201,12 +201,6 @@ step changed (ArcGIS Pro):
 </p>
 
 <p align="center">
-    <img height="350" src="img/indices_data.png" alt="Heat Health Indices Data"/>
-    <br>
-    <em>Heat Health Indices Data</em>
-</p>
-
-<p align="center">
     <img height="350" src="img/indices_corr.png" alt="Heat Health Indices Correlation"/>
     <br>
     <em>Heat Health Indices Correlation</em>
