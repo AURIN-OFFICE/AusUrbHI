@@ -1,24 +1,31 @@
 # AusUrbHI Heat Vulnerability and Urban Livability Case Study Documentation Archive
-This is the repository for scripts generated for the Australian Urban Health Indicator (AusUrbHI) project. The study aims to analyze the number and cause of emergency department (ED) presentations, hospitalizations, and deaths during a heatwave using person-level deidentified linked health data. The methodology involves determining the health component of the sensitivity sub-indicator, normalizing and categorizing variables, and conducting a Poisson multivariable regression to calculate the Heat Vulnerability Index (HVI) score. Spatial smoothing will be applied to the geographic data to protect data privacy and ensure statistical stability while adjusting for age, sex, and comorbidities. The resulting heat health vulnerability indicator will reveal the relative vulnerability of locations across the study area, and hotspot analysis will be performed to investigate statistically significant locations of heat health vulnerability. This comprehensive approach combines statistical methods and spatial analysis techniques to provide valuable insights into heat health vulnerability.
+This is the repository for scripts and supporting documents generated for the Australian Urban Health Indicator (AusUrbHI) project. The study aims to analyze the number and cause of emergency department (ED) presentations, hospitalizations, and deaths during a heatwave using person-level deidentified linked health data. The methodology involves determining the health component of the sensitivity sub-indicator, normalizing and categorizing variables, and conducting a Poisson multivariable regression to calculate the Heat Vulnerability Index (HVI) score. Spatial smoothing will be applied to the geographic data to protect data privacy and ensure statistical stability while adjusting for age, sex, and comorbidities. The resulting heat health vulnerability indicator will reveal the relative vulnerability of locations across the study area, and hotspot analysis will be performed to investigate statistically significant locations of heat health vulnerability. This comprehensive approach combines statistical methods and spatial analysis techniques to provide valuable insights into heat health vulnerability. The repository is structured as shown below.
+
+    ├── scripts
+    ├── documentation
+        ├── data_catalogue_and_metadata
+        ├── linked_health_data_application_and_documents (sensitive and not publicly awailable)
+    ├── img
+
 <p align="center">
-    <img width="350" src="misc/img/justification.png" alt=""/>
+    <img width="350" src="img/justification.png" alt=""/>
     <br>
     <em>Source: http://www.bom.gov.au/state-of-the-climate/australias-changing-climate.shtml</em>
 </p>
 <p align="center">
-    <img width="700" src="misc/img/ausurbhi.png" alt="Project diagram"/>
+    <img width="700" src="img/ausurbhi.png" alt="Project diagram"/>
     <br>
     <em>Project diagram</em>
 </p>
 <p align="center">
-    <img width="700" src="misc/img/ein.png" alt="Systen e-Infrastructure"/>
+    <img width="700" src="img/ein.png" alt="Systen e-Infrastructure"/>
     <br>
     <em>Systen e-Infrastructure</em>
 </p>
 
 ## Study area
 <p align="center">
-    <img width="350" src="misc/img/study area.png" alt=""/>
+    <img width="350" src="img/study area.png" alt=""/>
     <br>
     <em>Case Study Area</em>
 </p>
@@ -31,16 +38,7 @@ Maitland - 0.5 million \
 Tweed heads - 0.65 million \
 Albury - 0.05 million
 
-## Datasets
-Full data Inventory:
-https://unimelbcloud.sharepoint.com/:x:/r/teams/AURIN_office/_layouts/15/Doc.aspx?sourcedoc=%7B3AE490AA-A0E8-42AA-AF0C-0EA318798D03%7D&file=Full%20Data%20Inventory.xlsx&action=default&mobileredirect=true
-
-Short Version:
-https://unimelbcloud.sharepoint.com/:x:/r/teams/AURIN_office/_layouts/15/Doc.aspx?sourcedoc=%7BE3B7126E-0F94-4A0E-AFAB-7342D14F1670%7D&file=data%20list.xlsx&action=default&mobileredirect=true
-
-Linked Health Data Application Procedure Documentation:
-https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQalaZxQ/edit#gid=0
-
+## Key Datasets
 ### AURIN ABS Socio-Demographic Datasets
 - Obtained from [AURIN Data Provider](https://data.aurin.org.au/) and the [ABS GeoPackages downloader](https://www.abs.gov.au/census/find-census-data/geopackages?release=2021&geography=AUST&table=G01&gda=GDA2020)
 - ABS census 2016 and 2021
@@ -72,11 +70,7 @@ https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQala
 - RBDM registry-of-births-deaths-and-marriages-death-registrations: 264, 594 records for 264,530 patients
 
 ### RMIT Urban Observatory Livability Data
-<p align="center">
-    <img height="350" src="misc/img/livability.png" alt=""/>
-    <br>
-    <em>Livability Domains and Indicators</em>
-</p>
+(Hidden unpublished content under review.)
 
 ## Data Pre-pocessing
 ### AURIN vector data processing
@@ -89,27 +83,27 @@ https://docs.google.com/spreadsheets/d/1ZX1lXJiFFHv_DLouegUg7yjQhvf-XJVvctpbQala
   - number of sub-division area based
   - no division
 <p align="center">
-    <img height="250" src="misc/img/concordance.png" alt="SA1 Data Concordance"/>
+    <img height="250" src="img/concordance.png" alt="SA1 Data Concordance"/>
     <br>
     <em>SA1 Data Concordance</em>
 </p>
 
 ### Temperature raster data cube building, storage, and analysis
 <p align="center">
-    <img height="250" src="misc/img/lst.png" alt="Creating Land Surface Temperature Data Cube from Raster"/>
+    <img height="250" src="img/lst.png" alt="Creating Land Surface Temperature Data Cube from Raster"/>
     <br>
     <em>Creating Land Surface Temperature Data Cube from Raster</em>
 </p>
 
 <p align="center">
-    <img height="250" src="misc/img/ehf.png" alt="Deriving EHI and EHF to Identify Heat Days and Heat Waves"/>
+    <img height="250" src="img/ehf.png" alt="Deriving EHI and EHF to Identify Heat Days and Heat Waves"/>
     <br>
     <em>Deriving EHI and EHF to Identify Heat Days and Heat Waves</em>
 </p>
 EHF is calculated based on the definition and algorithm provided by BOM.
 
 <p align="center">
-    <img height="450" src="misc/img/ehf_algorithm.png" alt="EHF Algorithm"/>
+    <img height="450" src="img/ehf_algorithm.png" alt="EHF Algorithm"/>
     <br>
     <em>EHF Algorithm</em>
 </p>
@@ -139,14 +133,14 @@ Key processing steps:
 
 ### Geoscape building polygon data transformation and statistics
 <p align="center">
-    <img height="350" src="misc/img/buildings.png" alt="Building Data Statistics"/>
+    <img height="350" src="img/buildings.png" alt="Building Data Statistics"/>
     <br>
     <em>Building Data Statistics</em>
 </p>
 
 ### Geoscape landcover raster data analysis integration and statistics
 <p align="center">
-    <img height="350" src="misc/img/surface cover.png" alt="Land Cover Data Transformation and Statistics"/>
+    <img height="350" src="img/surface cover.png" alt="Land Cover Data Transformation and Statistics"/>
     <br>
     <em>Land Cover Data Transformation and Statistics</em>
 </p>
@@ -167,7 +161,7 @@ raster input include 2m surface rasters in NSW, as well as two 30m surface raste
 
 ### Service area network distance analysis
 <p align="center">
-    <img height="350" src="misc/img/service_area_1.png" alt=""/>
+    <img height="350" src="img/service_area_1.png" alt=""/>
     <br>
     <em>NHSD service accessibility</em>
 </p>
@@ -186,7 +180,7 @@ step (using ArcGIS Pro):
 - generating a shapefile with service accessibility (e.g., number of GPs within 1000m) divided by SA1 area (Python). This could be done with tools such as Spatial Join and Summary Statistics
 
 <p align="center">
-    <img height="350" src="misc/img/closest_facility.png" alt=""/>
+    <img height="350" src="img/closest_facility.png" alt=""/>
     <br>
     <em>Closest train stations from each SA1</em>
 </p>
@@ -201,24 +195,24 @@ step changed (ArcGIS Pro):
 
 ## Health Indices Generation
 <p align="center">
-    <img height="350" src="misc/img/indices.png" alt=""/>
+    <img height="350" src="img/indices.png" alt=""/>
     <br>
     <em>Indices and sub-indices</em>
 </p>
 
 <p align="center">
-    <img height="350" src="misc/img/indices_data.png" alt="Heat Health Indices Data"/>
+    <img height="350" src="img/indices_data.png" alt="Heat Health Indices Data"/>
     <br>
     <em>Heat Health Indices Data</em>
 </p>
 
 <p align="center">
-    <img height="350" src="misc/img/indices_corr.png" alt="Heat Health Indices Correlation"/>
+    <img height="350" src="img/indices_corr.png" alt="Heat Health Indices Correlation"/>
     <br>
     <em>Heat Health Indices Correlation</em>
 </p>
 
-## Microsoft building footprint Building Point Cloud Data Processing
+## (Archived) Microsoft building footprint Building Point Cloud Data Processing
 The building footprint processing methodology consists of three steps. 
 1.	Hole Removal: A BuildingHoleRemover class is initialized with an input shapefile of building polygons. It reads the shapefile, removes small holes from the building polygons based on a minimum area, and saves the processed polygons to a new shapefile.
 2.	Rebuffering: A BuildingReBuffer class is initialized with the input shapefile of processed building polygons. It applies a buffer to the building polygons and saves the buffered polygons to a new shapefile.
@@ -226,32 +220,32 @@ The building footprint processing methodology consists of three steps.
 An example result of the approach is shown below:
 
 <p align="center">
-    <img height="250" src="misc/img/demo.png" alt="Process building point cloud data"/>
+    <img height="250" src="img/demo.png" alt="Process building point cloud data"/>
     <br>
     <em>Process building point cloud data</em>
 </p>
 <p align="center">
-    <img height="250" src="misc/img/comparison.png" alt="Comparison of processing result"/>
+    <img height="250" src="img/comparison.png" alt="Comparison of processing result"/>
     <br>
     <em>Comparison of processing result</em>
 </p>
 
-## SNOMED-CT-AU to ICD-10 Mapping
+## (Archived) SNOMED-CT-AU to ICD-10 Mapping
 The package performs code mapping between SNOMED-CT-AU and ICD-10. The methodology involved mapping SNOMED CT codes to ICD codes using a mock-up dataset with 4,000+ entries. Four steps were taken: 1) using Snapper to resolve synonyms and unofficial names, 2) using SnoMap, 3) using the IHTSDO international SNOMED mapping tool for cross-validation, and 4) using the I-MAGIC mapper, which resolved some unmatched entries. The final result was 99.68% recall, with 13 unmatched codes.
 However, there are risks associated with the process: 1) the actual dataset might not be as clean as the mock-up, 2) the size of the real dataset is unknown and may affect tool usability, 3) precision has not been checked, making validation difficult, 4) a coder with professional knowledge may be required to resolve unmatched entries and disambiguate multi-match cases, and 5) differences between the Australian and international versions of the codes may impact the reliability of the results from international tools. In conclusion, the methodology achieved a high recall rate, but further validation and professional expertise may be needed to ensure accurate results.
 
 <p align="center">
-    <img width="400" src="misc/img/SnoMap.png" alt="The SnoMap tool"/>
+    <img width="400" src="img/SnoMap.png" alt="The SnoMap tool"/>
     <br>
     <em>The SnoMap tool</em>
 </p>
 <p align="center">
-    <img width="400" src="misc/img/IHTSDOl.png" alt="The IHTSDO international SNOMED mapping tool"/>
+    <img width="400" src="img/IHTSDOl.png" alt="The IHTSDO international SNOMED mapping tool"/>
     <br>
     <em>The IHTSDO international SNOMED mapping tool</em>
 </p>
 <p align="center">
-    <img width="400" src="misc/img/i_magic.png" alt="The I-MAGIC tool"/>
+    <img width="400" src="img/i_magic.png" alt="The I-MAGIC tool"/>
     <br>
     <em>The I-MAGIC tool</em>
 </p>
